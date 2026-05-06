@@ -1,13 +1,23 @@
 'use client'
 import { useState } from 'react'
 
-const DEMO_ISSUES = [
-  { level: 'error', title: 'Images missing alt text', desc: '6 <img> elements have no alt attribute.', wcag: 'WCAG 1.1.1' },
-  { level: 'error', title: 'Insufficient color contrast', desc: 'Text has 2.8:1 ratio — below the 4.5:1 minimum.', wcag: 'WCAG 1.4.3' },
-  { level: 'error', title: 'Form inputs without labels', desc: '3 inputs are not associated with a label.', wcag: 'WCAG 1.3.1' },
-  { level: 'warning', title: 'Missing skip navigation link', desc: 'No skip link found for keyboard users.', wcag: 'WCAG 2.4.1' },
-  { level: 'warning', title: 'Duplicate link text', desc: '4 "Read more" links are not descriptive.', wcag: 'WCAG 2.4.6' },
-]
+interface Violation {
+  id: string
+  impact: string
+  help: string
+  description: string
+  helpUrl: string
+  wcag: string
+  nodes: number
+}
+
+interface ScanResults {
+  violations: Violation[]
+  passes: number
+  errors: number
+  warnings: number
+  score: number
+}
 
 export default function Scanner() {
   const [url, setUrl] = useState('')
@@ -15,19 +25,43 @@ export default function Scanner() {
   const [progress, setProgress] = useState(0)
   const [step, setStep] = useState('')
   const [done, setDone] = useState(false)
-
-  const steps = ['Connecting to URL…','Loading DOM…','Running WCAG checks…','Analyzing contrast…','Generating report…']
+  const [results, setResults] = useState<ScanResults | null>(null)
 
   async function runScan() {
+    if (!url) return
     setDone(false)
+    setResults(null)
     setScanning(true)
-    for (let i = 0; i < steps.length; i++) {
-      setStep(steps[i])
-      setProgress(Math.round(((i + 1) / steps.length) * 100))
-      await new Promise(r => setTimeout(r, 400))
+    setStep('Connecting to URL…')
+    setProgress(20)
+
+    try {
+      setStep('Running WCAG checks…')
+      setProgress(60)
+
+      const res = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+
+      setProgress(90)
+      const data = await res.json()
+
+      if (data.error) {
+        setStep('Error: ' + data.error)
+        setScanning(false)
+        return
+      }
+
+      setResults(data)
+      setProgress(100)
+      setScanning(false)
+      setDone(true)
+    } catch (err) {
+      setStep('Failed to reach the URL.')
+      setScanning(false)
     }
-    setScanning(false)
-    setDone(true)
   }
 
   return (
@@ -37,6 +71,7 @@ export default function Scanner() {
         <h2 className="font-serif text-4xl text-slate-900 mb-3">Scan any URL instantly</h2>
         <p className="text-slate-500">Paste any public URL and see real accessibility issues flagged in seconds.</p>
       </div>
+
       <div className="max-w-2xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
         <div className="bg-slate-900 px-4 py-3 flex items-center gap-3">
           <div className="flex gap-1.5">
@@ -45,6 +80,7 @@ export default function Scanner() {
             <span className="w-3 h-3 rounded-full bg-green-500" />
           </div>
         </div>
+
         <div className="p-6">
           <div className="flex gap-3 mb-6">
             <input
@@ -70,40 +106,65 @@ export default function Scanner() {
                 <span>{progress}%</span>
               </div>
               <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-400 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+                <div
+                  className="h-full bg-emerald-400 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           )}
 
-          {done && (
+          {done && results && (
             <div>
               <div className="grid grid-cols-4 gap-3 mb-4">
-                {[['7','Errors','text-red-500'],['4','Warnings','text-amber-500'],['31','Passed','text-green-600'],['74','Score','text-slate-900']].map(([val, label, color]) => (
-                  <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                {[
+                  [results.errors, 'Errors', 'text-red-500'],
+                  [results.warnings, 'Warnings', 'text-amber-500'],
+                  [results.passes, 'Passed', 'text-green-600'],
+                  [results.score, 'Score', 'text-slate-900'],
+                ].map(([val, label, color]) => (
+                  <div key={String(label)} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
                     <div className={`font-serif text-2xl ${color}`}>{val}</div>
-                    <div className="text-xs text-slate-400 uppercase tracking-wide mt-1">{label}</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-wide mt-1">{String(label)}</div>
                   </div>
                 ))}
               </div>
+
               <div className="space-y-2.5">
-                {DEMO_ISSUES.map((issue) => (
-                  <div key={issue.title} className="flex items-start gap-3 p-3 border border-slate-200 rounded-xl text-sm">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full mt-0.5 shrink-0 ${issue.level === 'error' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'}`}>
-                      {issue.level === 'error' ? 'Error' : 'Warning'}
+                {results.violations.slice(0, 5).map((v) => (
+                  <div key={v.id} className="flex items-start gap-3 p-3 border border-slate-200 rounded-xl text-sm">
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full mt-0.5 shrink-0 ${
+                      v.impact === 'critical' || v.impact === 'serious'
+                        ? 'bg-red-100 text-red-600'
+                        : 'bg-amber-100 text-amber-600'
+                    }`}>
+                      {v.impact}
                     </span>
                     <div className="flex-1">
-                      <div className="font-medium text-slate-800">{issue.title}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">{issue.desc}</div>
+                      <div className="font-medium text-slate-800">{v.help}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">
+                        {v.nodes} element{v.nodes !== 1 ? 's' : ''} affected
+                      </div>
                     </div>
-                    <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">{issue.wcag}</span>
+                    
+                      href={v.helpUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0 hover:underline"
+                    >
+                      {v.wcag || 'Learn more'}
+                    </a>
                   </div>
                 ))}
               </div>
-              <p className="text-center text-xs text-slate-400 mt-4">
-                Free scan shows top 5 issues.{' '}
-                <a href="#pricing" className="text-emerald-600 font-semibold">Upgrade</a>{' '}
-                for full reports &amp; monitoring.
-              </p>
+
+              {results.violations.length > 5 && (
+                <p className="text-center text-xs text-slate-400 mt-4">
+                  Showing 5 of {results.violations.length} issues.{' '}
+                  <a href="#pricing" className="text-emerald-600 font-semibold">Upgrade</a>{' '}
+                  for the full report.
+                </p>
+              )}
             </div>
           )}
         </div>
