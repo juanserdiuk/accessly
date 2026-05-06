@@ -146,7 +146,7 @@ export default function Scanner() {
                         {v.nodes} element{v.nodes !== 1 ? 's' : ''} affected
                       </div>
                     </div>
-                    
+                    <a
                       href={v.helpUrl}
                       target="_blank"
                       rel="noopener noreferrer"
