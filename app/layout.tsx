@@ -1,15 +1,61 @@
 import type { Metadata } from 'next'
 import './globals.css'
 
+const BASE_URL = 'https://accessly.io'
+
 export const metadata: Metadata = {
-  title: 'Accessly — Web Accessibility Scanner',
-  description: 'Scan any URL for accessibility issues in seconds.',
+  metadataBase: new URL(BASE_URL),
+  title: 'Accessly — WCAG Accessibility Scanner',
+  description: 'Scan any website for WCAG 2.2 accessibility issues in seconds. Get actionable reports, track compliance over time, and fix issues fast. Free to start.',
+  keywords: [
+    'accessibility scanner',
+    'WCAG compliance',
+    'WCAG 2.2',
+    'web accessibility',
+    'accessibility audit',
+    'ADA compliance',
+    'axe-core',
+    'screen reader testing',
+    'accessibility checker',
+    'WCAG AA',
+    'WCAG AAA',
+    'accessibility testing tool',
+    'website compliance checker',
+  ],
+  alternates: {
+    canonical: BASE_URL,
+  },
+  openGraph: {
+    type: 'website',
+    url: BASE_URL,
+    siteName: 'Accessly',
+    title: 'Accessly — WCAG Accessibility Scanner',
+    description: 'Scan any website for WCAG 2.2 accessibility issues in seconds. Actionable reports, compliance tracking, and team workflows — free to start.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Accessly — WCAG Accessibility Scanner',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Accessly — WCAG Accessibility Scanner',
+    description: 'Scan any website for WCAG 2.2 accessibility issues in seconds. Actionable reports, compliance tracking, and team workflows — free to start.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   )
 }

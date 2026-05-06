@@ -1,5 +1,9 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+
+const SCAN_LIMIT = 3
+const STORAGE_KEY = 'accessly_scan_count'
 
 interface Violation {
   id: string
@@ -26,39 +30,72 @@ export default function Scanner() {
   const [step, setStep] = useState('')
   const [done, setDone] = useState(false)
   const [results, setResults] = useState<ScanResults | null>(null)
+  const [scanCount, setScanCount] = useState(0)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    const stored = parseInt(localStorage.getItem(STORAGE_KEY) ?? '0', 10)
+    setScanCount(stored)
+  }, [])
+
+  function startProgressTimer() {
+    setProgress(0)
+    intervalRef.current = setInterval(() => {
+      setProgress(p => p < 95 ? Math.min(p + 3, 95) : p)
+    }, 500)
+  }
+
+  function stopProgressTimer() {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }
 
   async function runScan() {
     if (!url) return
+    if (scanCount >= SCAN_LIMIT) return
+    const normalizedUrl = /^https?:\/\//i.test(url) ? url : 'https://' + url
+    if (normalizedUrl !== url) setUrl(normalizedUrl)
     setDone(false)
     setResults(null)
     setScanning(true)
-    setStep('Connecting to URL…')
-    setProgress(20)
+    setStep('Scanning…')
+    startProgressTimer()
 
     try {
-      setStep('Running WCAG checks…')
-      setProgress(60)
-
       const res = await fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: normalizedUrl }),
       })
 
-      setProgress(90)
-      const data = await res.json()
+      console.log('[Scanner] response status:', res.status, res.ok)
 
-      if (data.error) {
-        setStep('Error: ' + data.error)
+      const data = await res.json()
+      console.log('[Scanner] response data:', data)
+
+      if (!res.ok || data.error) {
+        const msg = data.error || `HTTP ${res.status}`
+        console.error('[Scanner] scan error:', msg)
+        stopProgressTimer()
+        setStep('Error: ' + msg)
         setScanning(false)
         return
       }
 
-      setResults(data)
+      console.log('[Scanner] setting results, violations:', data.violations?.length)
+      const newCount = scanCount + 1
+      localStorage.setItem(STORAGE_KEY, String(newCount))
+      setScanCount(newCount)
+      stopProgressTimer()
       setProgress(100)
+      setResults(data)
       setScanning(false)
       setDone(true)
     } catch (err) {
+      console.error('[Scanner] fetch threw:', err)
+      stopProgressTimer()
       setStep('Failed to reach the URL.')
       setScanning(false)
     }
@@ -82,22 +119,37 @@ export default function Scanner() {
         </div>
 
         <div className="p-6">
-          <div className="flex gap-3 mb-6">
-            <input
-              type="url"
-              value={url}
-              onChange={e => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400"
-            />
-            <button
-              onClick={runScan}
-              disabled={scanning}
-              className="bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-slate-700 transition disabled:opacity-60"
-            >
-              {scanning ? 'Scanning…' : 'Scan now'}
-            </button>
-          </div>
+          {scanCount >= SCAN_LIMIT ? (
+            <div className="text-center py-6">
+              <p className="text-slate-700 font-medium mb-1">You've used your 3 free scans</p>
+              <p className="text-sm text-slate-400 mb-4">Sign up for unlimited scans.</p>
+              <Link href="/signup" className="inline-block bg-emerald-400 text-slate-900 font-semibold px-5 py-2.5 rounded-xl hover:bg-emerald-300 transition text-sm">
+                Sign up for unlimited scans →
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-3">
+                <input
+                  type="url"
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400"
+                />
+                <button
+                  onClick={runScan}
+                  disabled={scanning}
+                  className="bg-slate-900 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:bg-slate-700 transition disabled:opacity-60"
+                >
+                  {scanning ? 'Scanning…' : 'Scan now'}
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-2 mb-4">
+                Include https:// — e.g. https://example.com &nbsp;·&nbsp; {SCAN_LIMIT - scanCount} free scan{SCAN_LIMIT - scanCount !== 1 ? 's' : ''} remaining
+              </p>
+            </>
+          )}
 
           {scanning && (
             <div className="mb-4">
@@ -146,8 +198,8 @@ export default function Scanner() {
                         {v.nodes} element{v.nodes !== 1 ? 's' : ''} affected
                       </div>
                     </div>
-                    <a
-                      href={v.helpUrl}
+                    
+                    <a  href={v.helpUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0 hover:underline"
