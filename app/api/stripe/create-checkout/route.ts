@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
+import { createClient } from '@/lib/supabase/server'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly-eight.vercel.app'
 
@@ -29,8 +30,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing type or plan' }, { status: 400 })
     }
 
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
     const successUrl = `${SITE_URL}/dashboard?checkout=success`
     const cancelUrl  = `${SITE_URL}/pricing`
+    const metadata   = { type, plan, billing }
 
     if (type === 'subscription') {
       const planConfig = SUBSCRIPTION_PLANS[plan as keyof typeof SUBSCRIPTION_PLANS]
@@ -41,6 +46,8 @@ export async function POST(req: NextRequest) {
 
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
+        client_reference_id: user?.id,
+        metadata,
         line_items: [{
           price_data: {
             currency: 'usd',
@@ -65,6 +72,8 @@ export async function POST(req: NextRequest) {
 
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
+        client_reference_id: user?.id,
+        metadata,
         line_items: [{
           price_data: {
             currency: 'usd',
