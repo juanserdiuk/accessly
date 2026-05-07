@@ -1,9 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import Topbar from '@/components/dashboard/Topbar'
-import ShareButton from '@/components/dashboard/ShareButton'
-import PrintButton from '@/components/dashboard/PrintButton'
 
 type Violation = {
   id: string
@@ -30,7 +27,7 @@ function hostname(url: string) {
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+    month: 'long', day: 'numeric', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
 }
@@ -47,20 +44,18 @@ function scoreTextColor(score: number) {
   return 'text-red-500'
 }
 
-export default async function ScanReportPage({
+export default async function PublicScanReportPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const supabase = createAdminClient()
 
   const { data: scan } = await supabase
     .from('scans')
     .select('id, url, score, errors, warnings, passes, violations, created_at')
     .eq('id', id)
-    .eq('user_id', user!.id)
     .single()
 
   if (!scan) notFound()
@@ -73,74 +68,59 @@ export default async function ScanReportPage({
   const color = gaugeColor(scan.score)
 
   return (
-    <div className="dashboard-scroll flex-1 overflow-y-auto">
-      <Topbar title="Scan Report" subtitle={hostname(scan.url)} />
-
-      <div className="p-7 space-y-5 max-w-5xl print:max-w-none print:p-0">
-
-        {/* Print-only header — hidden on screen */}
-        <div className="hidden print:flex items-center justify-between border-b border-slate-200 pb-5 mb-2">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen bg-slate-50">
+      {/* Nav */}
+      <header className="bg-white border-b border-slate-200">
+        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 bg-emerald-400 rounded-lg flex items-center justify-center shrink-0">
               <span className="text-slate-900 text-xs font-bold">A</span>
             </div>
             <span className="font-serif text-lg text-slate-900">Accessly</span>
-          </div>
-          <span className="text-xs text-slate-400">Accessibility Report · {formatDate(scan.created_at)}</span>
-        </div>
-
-        {/* Back + actions — hidden when printing */}
-        <div className="flex items-center justify-between print:hidden">
-          <Link
-            href="/dashboard/scans"
-            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-slate-700 transition"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-            All scans
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400">{formatDate(scan.created_at)}</span>
-            <ShareButton scanId={scan.id} />
-            <PrintButton />
+          <Link
+            href="/signup"
+            className="text-sm font-semibold bg-slate-900 text-white px-4 py-1.5 rounded-lg hover:bg-slate-700 transition"
+          >
+            Sign up free
+          </Link>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-6 py-10 space-y-5">
+        {/* Report header */}
+        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Accessibility Report</p>
+              <a
+                href={scan.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-800 font-medium hover:text-emerald-600 transition break-all text-lg"
+              >
+                {scan.url}
+              </a>
+            </div>
+            <span className="text-xs text-slate-400 whitespace-nowrap pt-1">{formatDate(scan.created_at)}</span>
           </div>
         </div>
 
-        {/* URL */}
-        <div className="bg-white border border-slate-200 rounded-2xl px-6 py-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Scanned URL</p>
-          <a
-            href={scan.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-800 font-medium hover:text-emerald-600 transition break-all"
-          >
-            {scan.url}
-          </a>
-        </div>
-
-        {/* Score gauge + 3 metric cards */}
+        {/* Score gauge + metrics */}
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Score</p>
             <div className="relative w-36 h-36">
-              <svg
-                className="-rotate-90"
-                width="144"
-                height="144"
-                viewBox="-8 -8 160 160"
-                style={{ overflow: 'visible' }}
-              >
-                <circle cx="72" cy="72" r="54" fill="none" stroke="#f1f5f9" strokeWidth="12" />
-                <circle cx="72" cy="72" r="54" fill="none" stroke={color} strokeWidth="12"
+              <svg className="-rotate-90" width="144" height="144" viewBox="0 0 144 144">
+                <circle cx="72" cy="72" r="56" fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                <circle cx="72" cy="72" r="56" fill="none" stroke={color} strokeWidth="12"
                   strokeLinecap="round"
-                  strokeDasharray={2 * Math.PI * 54}
-                  strokeDashoffset={2 * Math.PI * 54 * (1 - scan.score / 100)} />
+                  strokeDasharray={circumference}
+                  strokeDashoffset={circumference * (1 - scan.score / 100)} />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                <span className={`font-serif text-4xl leading-none ${scoreTextColor(scan.score)}`}>{scan.score}</span>
-                <span className="text-xs text-slate-400 leading-none">/100</span>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`font-serif text-4xl ${scoreTextColor(scan.score)}`}>{scan.score}</span>
+                <span className="text-xs text-slate-400">/100</span>
               </div>
             </div>
           </div>
@@ -254,7 +234,15 @@ export default async function ScanReportPage({
           )}
         </div>
 
-      </div>
+        {/* Footer CTA */}
+        <div className="text-center py-4">
+          <p className="text-xs text-slate-400">
+            Generated by{' '}
+            <Link href="/" className="text-emerald-600 font-semibold hover:underline">Accessly</Link>
+            {' '}— WCAG accessibility scanner
+          </p>
+        </div>
+      </main>
     </div>
   )
 }

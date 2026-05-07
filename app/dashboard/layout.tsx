@@ -15,9 +15,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     .single()
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="dashboard-layout flex h-screen overflow-hidden bg-slate-50">
       <Sidebar email={user.email ?? ''} plan={profile?.plan ?? 'free'} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="dashboard-content flex-1 flex flex-col overflow-hidden">
         {children}
       </div>
     </div>

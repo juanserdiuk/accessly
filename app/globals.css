@@ -1,3 +1,44 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  /* Preserve colours for score gauges and badges */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Break the dashboard flex/height constraints so all content renders */
+  .dashboard-layout {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-content {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-scroll {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* Keep each violation row on one page wherever possible */
+  tbody tr {
+    page-break-inside: avoid;
+  }
+
+  /* Drop shadows look bad on paper */
+  * {
+    box-shadow: none !important;
+  }
+}

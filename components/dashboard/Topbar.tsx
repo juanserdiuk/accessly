@@ -7,7 +7,7 @@ interface Props {
 
 export default function Topbar({ title, subtitle }: Props) {
   return (
-    <div className="h-15 bg-white border-b border-slate-200 px-7 flex items-center justify-between shrink-0">
+    <div className="h-15 bg-white border-b border-slate-200 px-7 flex items-center justify-between shrink-0 print:hidden">
       <div>
         <h1 className="font-serif text-xl text-slate-900">{title}</h1>
         {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
