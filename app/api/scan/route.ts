@@ -1,5 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import puppeteer from 'puppeteer-core'
+import chromium from '@sparticuz/chromium-min'
+
+export const maxDuration = 30
+
+async function getBrowser() {
+  const isDev = process.env.NODE_ENV === 'development'
+
+  if (isDev) {
+    const { executablePath } = await import('puppeteer')
+    return puppeteer.launch({
+      executablePath: await executablePath(),
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    })
+  }
+
+  return puppeteer.launch({
+    executablePath: await chromium.executablePath(),
+    headless: true,
+    args: chromium.args,
+  })
+}
 
 export async function POST(req: NextRequest) {
   const { url } = await req.json()
@@ -10,10 +32,7 @@ export async function POST(req: NextRequest) {
 
   let browser
   try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
+    browser = await getBrowser()
 
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 })

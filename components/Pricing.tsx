@@ -2,6 +2,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
+const packs = [
+  { name: 'Starter',     pages: 10,  price: 9,  perPage: '0.90' },
+  { name: 'Basic',       pages: 25,  price: 19, perPage: '0.76' },
+  { name: 'Pro Pack',    pages: 50,  price: 29, perPage: '0.58', featured: true },
+  { name: 'Agency Pack', pages: 100, price: 49, perPage: '0.49' },
+]
+
 const plans = [
   {
     name: 'Free', monthly: 0, annual: 0,
@@ -29,11 +36,45 @@ export default function Pricing() {
   return (
     <section id="pricing" className="py-20 px-6">
       <div className="max-w-5xl mx-auto">
-        <div className="text-center mb-10">
+        <div className="text-center mb-12">
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-3">Pricing</p>
           <h2 className="font-serif text-4xl text-slate-900 mb-3">Simple, transparent pricing</h2>
-          <p className="text-slate-500">Start free. Upgrade when you need more.</p>
+          <p className="text-slate-500">Pay once for a scan pack, or subscribe for ongoing monitoring.</p>
         </div>
+        {/* One-time scan packs */}
+        <div className="mb-16">
+          <div className="text-center mb-8">
+            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-2">One-time scan packs</p>
+            <p className="text-slate-500 text-sm">No subscription. Buy a pack and use it whenever you need it.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+            {packs.map((pack) => (
+              <div key={pack.name} className={`relative rounded-2xl border p-6 flex flex-col transition-all hover:-translate-y-1 hover:shadow-lg ${pack.featured ? 'bg-slate-900 border-slate-900' : 'bg-white border-slate-200'}`}>
+                {pack.featured && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">Best value</div>
+                )}
+                <div className={`text-xs font-semibold uppercase tracking-widest mb-3 ${pack.featured ? 'text-white/50' : 'text-slate-400'}`}>{pack.name}</div>
+                <div className="mb-1">
+                  <span className={`font-serif text-4xl ${pack.featured ? 'text-white' : 'text-slate-900'}`}>${pack.price}</span>
+                  <span className={`text-sm ml-1 ${pack.featured ? 'text-white/40' : 'text-slate-400'}`}>one-time</span>
+                </div>
+                <div className={`text-sm font-medium mb-1 ${pack.featured ? 'text-white/80' : 'text-slate-700'}`}>{pack.pages} pages</div>
+                <div className={`text-xs mb-6 ${pack.featured ? 'text-white/40' : 'text-slate-400'}`}>${pack.perPage} per page</div>
+                <button className={`mt-auto block w-full text-center py-2.5 rounded-xl font-semibold text-sm transition ${pack.featured ? 'bg-emerald-400 text-slate-900 hover:bg-emerald-300' : 'border border-slate-200 text-slate-800 hover:border-slate-400 hover:bg-slate-50'}`}>
+                  Buy now
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Subscription plans */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="flex-1 h-px bg-slate-200" />
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 whitespace-nowrap">Or subscribe for ongoing monitoring</p>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
         <div className="flex items-center justify-center gap-4 mb-10">
           <span className="text-sm font-medium text-slate-500">Monthly</span>
           <button onClick={() => setAnnual(!annual)} className={`w-12 h-6 rounded-full relative transition-colors ${annual ? 'bg-emerald-400' : 'bg-slate-200'}`}>

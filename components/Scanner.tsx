@@ -134,6 +134,7 @@ export default function Scanner() {
                   type="url"
                   value={url}
                   onChange={e => setUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && runScan()}
                   placeholder="https://example.com"
                   className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400"
                 />
