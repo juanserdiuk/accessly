@@ -8,9 +8,15 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', user.id)
+    .single()
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50">
-      <Sidebar />
+      <Sidebar email={user.email ?? ''} plan={profile?.plan ?? 'free'} />
       <div className="flex-1 flex flex-col overflow-hidden">
         {children}
       </div>

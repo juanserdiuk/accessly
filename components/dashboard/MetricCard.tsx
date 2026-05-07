@@ -1,10 +1,12 @@
+import { ReactNode } from 'react'
+
 interface Props {
   label: string
   value: string | number
   trend?: string
   trendUp?: boolean
   trendNeutral?: boolean
-  icon: string
+  icon: ReactNode
   iconBg: string
 }
 
@@ -12,7 +14,7 @@ export default function MetricCard({ label, value, trend, trendUp, trendNeutral,
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-5">
       <div className="flex items-start justify-between mb-4">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${iconBg}`}>
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${iconBg}`}>
           {icon}
         </div>
         {trend && (
