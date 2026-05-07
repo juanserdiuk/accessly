@@ -3,6 +3,7 @@ import Topbar from '@/components/dashboard/Topbar'
 import ProfileForm from './ProfileForm'
 import PasswordForm from './PasswordForm'
 import BillingSection from './BillingSection'
+import ApiKeySection from './ApiKeySection'
 import DangerZone from './DangerZone'
 
 function Section({
@@ -45,8 +46,10 @@ export default async function SettingsPage() {
   const firstName = (meta.first_name as string) ?? ''
   const lastName  = (meta.last_name  as string) ?? ''
   const email     = user!.email ?? ''
-  const plan      = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
+  const plan        = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
   const hasCustomer = !!profile?.stripe_customer_id
+  const apiKey      = process.env.CICD_API_KEY ?? null
+  const siteUrl     = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
 
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
@@ -76,6 +79,14 @@ export default async function SettingsPage() {
           description="Your current subscription plan and billing options."
         >
           <BillingSection plan={plan} hasCustomer={hasCustomer} />
+        </Section>
+
+        {/* Developer API */}
+        <Section
+          title="Developer API"
+          description="Use the REST API to run scans from your CI/CD pipeline or custom tooling."
+        >
+          <ApiKeySection apiKey={apiKey} siteUrl={siteUrl} />
         </Section>
 
         {/* Danger Zone */}
