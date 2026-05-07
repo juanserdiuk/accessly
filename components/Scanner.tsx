@@ -12,7 +12,7 @@ interface Violation {
   description: string
   helpUrl: string
   wcag: string
-  nodes: number
+  nodes: { html: string; target: string | null; failureSummary: string | null; impact: string | null }[] | number
 }
 
 interface ScanResults {
@@ -196,7 +196,7 @@ export default function Scanner() {
                     <div className="flex-1">
                       <div className="font-medium text-slate-800">{v.help}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
-                        {v.nodes} element{v.nodes !== 1 ? 's' : ''} affected
+                        {Array.isArray(v.nodes) ? v.nodes.length : v.nodes} element{(Array.isArray(v.nodes) ? v.nodes.length : v.nodes) !== 1 ? 's' : ''} affected
                       </div>
                     </div>
                     

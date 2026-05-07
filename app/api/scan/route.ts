@@ -54,7 +54,12 @@ export async function POST(req: NextRequest) {
       help: v.help,
       helpUrl: v.helpUrl,
       wcag: v.tags.filter((t: string) => t.startsWith('wcag')).join(', '),
-      nodes: v.nodes.length,
+      nodes: v.nodes.map((n: any) => ({
+        html: n.html,
+        target: n.target?.[0] ?? null,
+        failureSummary: n.failureSummary ?? null,
+        impact: n.impact ?? null,
+      })),
     }))
 
     const passes = results.passes.length

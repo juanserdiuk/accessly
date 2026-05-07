@@ -2,6 +2,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
+type NodeDetail = {
+  html: string
+  target: string | null
+  failureSummary: string | null
+  impact: string | null
+}
+
 type Violation = {
   id: string
   impact: 'critical' | 'serious' | 'moderate' | 'minor'
@@ -9,7 +16,7 @@ type Violation = {
   help: string
   helpUrl: string
   wcag: string
-  nodes: number
+  nodes: NodeDetail[]
 }
 
 const impactOrder: Record<string, number> = { critical: 0, serious: 1, moderate: 2, minor: 3 }
@@ -212,7 +219,7 @@ export default async function PublicScanReportPage({
                       <div className="text-xs text-slate-400 leading-relaxed max-w-md">{v.description}</div>
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                      {v.nodes} {v.nodes === 1 ? 'element' : 'elements'}
+                      {v.nodes.length} {v.nodes.length === 1 ? 'element' : 'elements'}
                     </td>
                     <td className="px-4 py-4">
                       <span className="text-xs text-slate-500 font-mono">{v.wcag || '—'}</span>

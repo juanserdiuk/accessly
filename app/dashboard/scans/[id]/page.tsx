@@ -4,6 +4,14 @@ import Link from 'next/link'
 import Topbar from '@/components/dashboard/Topbar'
 import ShareButton from '@/components/dashboard/ShareButton'
 import PrintButton from '@/components/dashboard/PrintButton'
+import ViolationAccordion from '@/components/dashboard/ViolationAccordion'
+
+type NodeDetail = {
+  html: string
+  target: string | null
+  failureSummary: string | null
+  impact: string | null
+}
 
 type Violation = {
   id: string
@@ -12,17 +20,10 @@ type Violation = {
   help: string
   helpUrl: string
   wcag: string
-  nodes: number
+  nodes: NodeDetail[]
 }
 
 const impactOrder: Record<string, number> = { critical: 0, serious: 1, moderate: 2, minor: 3 }
-
-const impactStyles: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700',
-  serious:  'bg-orange-100 text-orange-700',
-  moderate: 'bg-amber-100 text-amber-700',
-  minor:    'bg-slate-100 text-slate-500',
-}
 
 function hostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
@@ -187,19 +188,21 @@ export default async function ScanReportPage({
           ))}
         </div>
 
-        {/* Violations table */}
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <div className="font-semibold text-slate-900">Violations</div>
-            <div className="text-xs text-slate-400 mt-0.5">
-              {violations.length === 0
-                ? 'No violations detected'
-                : `${violations.length} issue${violations.length !== 1 ? 's' : ''} detected, sorted by severity`}
+        {/* Violations */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="font-semibold text-slate-900">Violations</h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {violations.length === 0
+                  ? 'No violations detected'
+                  : `${violations.length} issue${violations.length !== 1 ? 's' : ''} detected, sorted by severity — click to expand`}
+              </p>
             </div>
           </div>
 
           {violations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center py-16 text-center">
               <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-3">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
                   <polyline points="20 6 9 17 4 12"/>
@@ -209,48 +212,7 @@ export default async function ScanReportPage({
               <p className="text-slate-400 text-xs mt-1">This page passed all checked accessibility rules.</p>
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">Impact</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Issue</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">Elements</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-40">WCAG</th>
-                  <th className="px-4 py-3 w-28" />
-                </tr>
-              </thead>
-              <tbody>
-                {violations.map((v, i) => (
-                  <tr key={v.id + i} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition align-top">
-                    <td className="px-5 py-4">
-                      <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${impactStyles[v.impact] ?? 'bg-slate-100 text-slate-500'}`}>
-                        {v.impact}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-slate-800 mb-0.5">{v.help}</div>
-                      <div className="text-xs text-slate-400 leading-relaxed max-w-md">{v.description}</div>
-                    </td>
-                    <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                      {v.nodes} {v.nodes === 1 ? 'element' : 'elements'}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="text-xs text-slate-500 font-mono">{v.wcag || '—'}</span>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <a
-                        href={v.helpUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-semibold text-emerald-600 hover:underline whitespace-nowrap"
-                      >
-                        Learn more →
-                      </a>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <ViolationAccordion violations={violations} />
           )}
         </div>
 
