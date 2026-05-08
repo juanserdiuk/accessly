@@ -24,7 +24,7 @@ export async function inviteMember(
 
   const { error } = await supabase
     .from('team_members')
-    .insert({ owner_id: user.id, email, role, status: 'pending' })
+    .insert({ owner_id: user.id, member_email: email, role, status: 'pending' })
 
   if (error) {
     if (error.code === '23505') return { error: 'This person has already been invited' }

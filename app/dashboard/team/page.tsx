@@ -5,7 +5,7 @@ import { removeMember } from './actions'
 
 type Member = {
   id: string
-  email: string
+  member_email: string
   role: string
   status: string
   created_at: string
@@ -47,7 +47,7 @@ export default async function TeamPage() {
 
   const { data: members } = await supabase
     .from('team_members')
-    .select('id, email, role, status, created_at')
+    .select('id, member_email, role, status, created_at')
     .eq('owner_id', user!.id)
     .order('created_at', { ascending: false })
 
@@ -101,7 +101,7 @@ export default async function TeamPage() {
               <tbody className="divide-y divide-slate-50">
                 {allMembers.map(member => (
                   <tr key={member.id} className="hover:bg-slate-50/50 transition">
-                    <td className="px-5 py-4 text-slate-700 font-medium">{member.email}</td>
+                    <td className="px-5 py-4 text-slate-700 font-medium">{member.member_email}</td>
                     <td className="px-5 py-4"><RoleBadge role={member.role} /></td>
                     <td className="px-5 py-4"><StatusBadge status={member.status} /></td>
                     <td className="px-5 py-4 text-right">
