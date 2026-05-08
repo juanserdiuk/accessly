@@ -1,12 +1,8 @@
-// Required .env.local vars:
-//   SMTP_HOST     e.g. smtp.gmail.com
-//   SMTP_PORT     e.g. 587
-//   SMTP_SECURE   true | false  (true for port 465)
-//   SMTP_USER     your SMTP username / email address
-//   SMTP_PASS     your SMTP password or app password
-//   SMTP_FROM     display address, e.g. "Accessly <no-reply@accessly.io>"
+// Required .env.local var:
+//   RESEND_API_KEY   your Resend API key (resend.com)
 
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
 
 function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -20,9 +16,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const name = (body.name ?? '').trim()
-  const email = (body.email ?? '').trim()
-  const url = (body.url ?? '').trim()
+  const name    = (body.name    ?? '').trim()
+  const email   = (body.email   ?? '').trim()
+  const url     = (body.url     ?? '').trim()
   const message = (body.message ?? '').trim()
 
   if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -30,37 +26,116 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
   if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 })
 
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-    console.warn('[contact] SMTP not configured — add SMTP_HOST, SMTP_USER, SMTP_PASS to .env.local')
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[contact] RESEND_API_KEY not set — add it to .env.local')
     return NextResponse.json({ success: true })
   }
 
-  const nodemailer = await import('nodemailer')
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
+  const n = esc(name)
+  const e = esc(email)
+  const u = url ? esc(url) : ''
+  const m = esc(message).replace(/\n/g, '<br>')
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:40px 16px">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
+
+        <!-- Header -->
+        <tr><td style="background:#0f172a;border-radius:12px 12px 0 0;padding:28px 36px">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="width:36px;height:36px;background:#34d399;border-radius:8px;text-align:center;vertical-align:middle">
+              <span style="color:#0f172a;font-size:18px;font-weight:800;line-height:36px">A</span>
+            </td>
+            <td style="padding-left:12px;color:#ffffff;font-size:18px;font-weight:600;vertical-align:middle">
+              Accessly
+            </td>
+          </tr></table>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#ffffff;padding:36px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0">
+          <p style="margin:0 0 6px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#64748b">
+            New inquiry
+          </p>
+          <h1 style="margin:0 0 28px;font-size:22px;font-weight:700;color:#0f172a">
+            ${n} got in touch
+          </h1>
+
+          <!-- Fields -->
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;width:100px;vertical-align:top;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8">
+                Name
+              </td>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:15px;color:#0f172a;font-weight:500">
+                ${n}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;vertical-align:top">
+                Email
+              </td>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:15px">
+                <a href="mailto:${e}" style="color:#059669;text-decoration:none;font-weight:500">${e}</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;vertical-align:top">
+                Website
+              </td>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:15px;color:#0f172a">
+                ${u ? `<a href="${u}" style="color:#059669;text-decoration:none;font-weight:500">${u}</a>` : '<span style="color:#94a3b8">Not provided</span>'}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;vertical-align:top">
+                Message
+              </td>
+              <td style="padding:14px 0;border-top:1px solid #f1f5f9;font-size:15px;color:#0f172a;line-height:1.65">
+                ${m}
+              </td>
+            </tr>
+          </table>
+
+          <!-- Reply CTA -->
+          <table cellpadding="0" cellspacing="0" style="margin-top:32px">
+            <tr><td style="background:#0f172a;border-radius:8px;padding:12px 24px">
+              <a href="mailto:${e}" style="color:#ffffff;font-size:14px;font-weight:600;text-decoration:none">
+                Reply to ${n} →
+              </a>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center">
+          <p style="margin:0;font-size:12px;color:#94a3b8">
+            Sent via <a href="https://accessly.io" style="color:#64748b;text-decoration:none;font-weight:500">Accessly</a> contact form
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`
+
+  const { error } = await resend.emails.send({
+    from: 'onboarding@resend.dev',
+    to: 'juanserdiuk@juanserdiuk.com',
+    replyTo: email,
+    subject: `New Accessly Inquiry: ${name}`,
+    html,
   })
 
-  try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM ?? `"Accessly" <${process.env.SMTP_USER}>`,
-      to: 'juanserdiuk@juanserdiuk.com',
-      replyTo: email,
-      subject: `Accessly inquiry from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\nWebsite: ${url || 'Not provided'}\n\n${message}`,
-      html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#0f172a">
-  <h2 style="margin-bottom:24px">New Accessly inquiry</h2>
-  <p><strong>Name:</strong> ${esc(name)}</p>
-  <p><strong>Email:</strong> <a href="mailto:${esc(email)}" style="color:#059669">${esc(email)}</a></p>
-  <p><strong>Website:</strong> ${url ? `<a href="${esc(url)}" style="color:#059669">${esc(url)}</a>` : 'Not provided'}</p>
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0">
-  <p style="white-space:pre-wrap;line-height:1.6">${esc(message)}</p>
-</div>`,
-    })
-  } catch (err) {
-    console.error('[contact] email send failed:', err)
+  if (error) {
+    console.error('[contact] Resend error:', error)
     return NextResponse.json({ error: 'Failed to send message. Please try again.' }, { status: 500 })
   }
 

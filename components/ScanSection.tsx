@@ -18,8 +18,8 @@ export default function ScanSection() {
           </p>
         </div>
 
-        {/* Three panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* Stacked panels */}
+        <div className="max-w-3xl mx-auto space-y-8">
           <Scanner />
           <DocScanner />
           <ContactPanel />
