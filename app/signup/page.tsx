@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
@@ -15,7 +15,7 @@ function getStrength(pw: string) {
   return s
 }
 
-export default function SignupPage() {
+function SignupForm() {
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
   const [plan, setPlan] = useState('Pro')
   const [showPass, setShowPass] = useState(false)
@@ -261,5 +261,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
   )
 }
