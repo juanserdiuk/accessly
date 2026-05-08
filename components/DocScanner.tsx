@@ -1,6 +1,7 @@
 'use client'
 import { useState, useRef } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface DocViolation {
   id: string
@@ -24,6 +25,7 @@ interface DocResults {
 const ACCEPTED = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 export default function DocScanner() {
+  const t = useTranslations('docScanner')
   const [file, setFile] = useState<File | null>(null)
   const [dragging, setDragging] = useState(false)
   const [scanning, setScanning] = useState(false)
@@ -48,11 +50,11 @@ export default function DocScanner() {
   function accept(f: File) {
     const ext = f.name.split('.').pop()?.toLowerCase() ?? ''
     if (!['pdf', 'docx'].includes(ext)) {
-      setError('Only PDF and .docx files are supported.')
+      setError(t('unsupportedType'))
       return
     }
     if (f.size > 10 * 1024 * 1024) {
-      setError('File must be under 10 MB.')
+      setError(t('tooLarge'))
       return
     }
     setFile(f)
@@ -72,10 +74,10 @@ export default function DocScanner() {
     setError('')
     setResults(null)
     setScanning(true)
-    setStep('Uploading file…')
+    setStep(t('uploading'))
     startProgress()
 
-    const steps = ['Uploading file…', 'Parsing document…', 'Running accessibility checks…']
+    const steps = [t('uploading'), t('parsing'), t('running')]
     let i = 0
     const stepInterval = setInterval(() => {
       i = Math.min(i + 1, steps.length - 1)
@@ -100,7 +102,7 @@ export default function DocScanner() {
     } catch {
       clearInterval(stepInterval)
       stopProgress()
-      setError('Upload failed. Please try again.')
+      setError(t('uploadFailed'))
     } finally {
       setScanning(false)
     }
@@ -125,11 +127,11 @@ export default function DocScanner() {
           </svg>
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-white">Document Scanner</div>
-          <div className="text-xs text-white/40">PDF &amp; Word accessibility checks</div>
+          <div className="text-sm font-semibold text-white">{t('title')}</div>
+          <div className="text-xs text-white/40">{t('sub')}</div>
         </div>
         <span className="ml-auto shrink-0 text-xs font-medium bg-emerald-400/20 text-emerald-400 px-2.5 py-1 rounded-full">
-          Free
+          {t('free')}
         </span>
       </div>
 
@@ -162,9 +164,9 @@ export default function DocScanner() {
                 </svg>
               </div>
               <p className="text-sm font-medium text-slate-700 mb-1">
-                {dragging ? 'Drop to upload' : 'Drop your document here'}
+                {dragging ? t('dropToUpload') : t('dropHere')}
               </p>
-              <p className="text-xs text-slate-400">PDF or Word (.docx) · max 10 MB</p>
+              <p className="text-xs text-slate-400">{t('fileHint')}</p>
             </div>
 
             {/* Selected file */}
@@ -195,7 +197,7 @@ export default function DocScanner() {
               className="w-full py-3 bg-slate-900 text-white text-sm font-semibold rounded-xl
                 hover:bg-slate-700 transition disabled:opacity-40 mb-3"
             >
-              {scanning ? step : 'Check accessibility'}
+              {scanning ? step : t('checkAccessibility')}
             </button>
 
             {scanning && (
@@ -210,7 +212,7 @@ export default function DocScanner() {
             )}
 
             <p className="text-xs text-slate-400 text-center mt-auto pt-2">
-              Checks title, language, alt text, headings, tagged content &amp; more
+              {t('footerHint')}
             </p>
           </>
         ) : (
@@ -223,17 +225,17 @@ export default function DocScanner() {
               </svg>
               <span className="text-xs font-medium text-slate-500 truncate">{results.fileName}</span>
               <button onClick={reset} className="ml-auto text-xs text-slate-400 hover:text-slate-600 transition shrink-0">
-                ← New scan
+                {t('newScan')}
               </button>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-3 mb-5">
               {([
-                [results.errors,   'Errors',   'text-red-500'],
-                [results.warnings, 'Warnings', 'text-amber-500'],
-                [results.passes,   'Passed',   'text-green-600'],
-                [results.score,    'Score',    'text-slate-900'],
+                [results.errors,   t('errors'),   'text-red-500'],
+                [results.warnings, t('warnings'), 'text-amber-500'],
+                [results.passes,   t('passed'),   'text-green-600'],
+                [results.score,    t('score'),    'text-slate-900'],
               ] as const).map(([val, label, color]) => (
                 <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
                   <div className={`font-serif text-2xl ${color}`}>{val}</div>
@@ -250,8 +252,8 @@ export default function DocScanner() {
                     <polyline points="20 6 9 17 4 12"/>
                   </svg>
                 </div>
-                <p className="text-sm font-semibold text-slate-800">All checks passed!</p>
-                <p className="text-xs text-slate-400 mt-1">This document meets the criteria we checked.</p>
+                <p className="text-sm font-semibold text-slate-800">{t('allPassedTitle')}</p>
+                <p className="text-xs text-slate-400 mt-1">{t('allPassedSub')}</p>
               </div>
             ) : (
               <div className="space-y-2.5">
@@ -277,8 +279,8 @@ export default function DocScanner() {
             )}
 
             <p className="text-center text-xs text-slate-400 mt-5">
-              Want a full audit?{' '}
-              <Link href="/signup" className="text-emerald-600 font-semibold">Create a free account →</Link>
+              {t('fullAuditCta')}{' '}
+              <Link href="/signup" className="text-emerald-600 font-semibold">{t('createAccount')}</Link>
             </p>
           </div>
         )}
