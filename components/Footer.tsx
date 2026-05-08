@@ -11,8 +11,13 @@ export default function Footer() {
           Accessly
         </Link>
         <div className="flex gap-6">
-          {['Features','Pricing','Privacy','Terms'].map(item => (
-            <Link key={item} href="#" className="text-sm text-white/40 hover:text-white/80 transition">{item}</Link>
+          {[
+            { label: 'Features', href: '/#features' },
+            { label: 'Pricing',  href: '/#pricing'  },
+            { label: 'Privacy',  href: '/privacy'   },
+            { label: 'Terms',    href: '/terms'      },
+          ].map(({ label, href }) => (
+            <Link key={label} href={href} className="text-sm text-white/40 hover:text-white/80 transition">{label}</Link>
           ))}
         </div>
         <p className="text-sm text-white/30">© 2026 Accessly. All rights reserved.</p>
