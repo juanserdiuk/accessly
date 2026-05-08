@@ -31,6 +31,7 @@ const Stars = () => (
 
 export default function Testimonials() {
   return (
+    <div className="hidden sm:block">
     <section className="py-20 px-6 bg-slate-50">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-14">
@@ -60,5 +61,6 @@ export default function Testimonials() {
         </div>
       </div>
     </section>
+    </div>
   )
 }
