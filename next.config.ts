@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
   },
 
+  turbopack: {},
+
   webpack: (config) => {
     config.externals = [...(config.externals || []), '@sparticuz/chromium', 'puppeteer-core']
     return config
