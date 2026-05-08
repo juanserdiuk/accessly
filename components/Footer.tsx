@@ -55,7 +55,7 @@ export default function Footer() {
               juanserdiuk@juanserdiuk.com
             </a>
             <a
-              href="https://linkedin.com/in/juanserdiuk"
+              href="https://www.linkedin.com/company/accessly-web-scanner/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 text-sm text-white/70 hover:text-white transition group"

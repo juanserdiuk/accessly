@@ -16,7 +16,7 @@ const bricolage = Bricolage_Grotesque({
   display: 'swap',
 })
 
-const BASE_URL = 'https://accessly.io'
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ?? 'https://accessly.us'
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),

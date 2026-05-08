@@ -206,9 +206,9 @@ export default async function DashboardPage() {
                     strokeDasharray={circumference}
                     strokeDashoffset={circumference * (1 - ringScore / 100)} />
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="font-serif text-3xl text-slate-900">{ringScore}</span>
-                  <span className="text-xs text-slate-400">/100</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-serif text-3xl leading-none text-slate-900">{ringScore}</span>
+                  <span className="text-xs leading-none text-slate-400">/100</span>
                 </div>
               </div>
               {[
