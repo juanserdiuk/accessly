@@ -39,7 +39,7 @@ export default function Nav() {
           </Link>
 
           {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden lg:flex items-center gap-8">
             {NAV_LINKS.map(({ label, href }) => (
               <Link key={label} href={href} className="text-sm text-slate-500 hover:text-slate-900 transition">{label}</Link>
             ))}
@@ -52,7 +52,7 @@ export default function Nav() {
           <button
             onClick={() => setOpen(o => !o)}
             aria-label={open ? 'Close menu' : 'Open menu'}
-            className="md:hidden flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
+            className="lg:hidden flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
           >
             <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
             <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 ${open ? 'w-0 opacity-0' : 'w-5'}`} />
@@ -62,7 +62,7 @@ export default function Nav() {
       </nav>
 
       {/* Mobile full-screen overlay */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`fixed inset-0 z-40 lg:hidden transition-all duration-300 ${open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-white/95 backdrop-blur-md flex flex-col pt-24 px-8">
           <nav className="flex flex-col gap-1">
             {NAV_LINKS.map(({ label, href }) => (
