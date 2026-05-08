@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import Link from 'next/link'
 import Topbar from '@/components/dashboard/Topbar'
 
@@ -8,8 +9,8 @@ function hostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale, {
     month: 'short', day: 'numeric', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
@@ -26,6 +27,8 @@ export default async function ScansPage({
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
+  const t = await getTranslations('dashboard.scans')
+  const locale = await getLocale()
   const { page: pageParam } = await searchParams
   const page = Math.max(1, parseInt(String(pageParam ?? '1'), 10))
   const offset = (page - 1) * PAGE_SIZE
@@ -47,8 +50,8 @@ export default async function ScansPage({
   return (
     <div className="flex-1 overflow-y-auto">
       <Topbar
-        title="Scans"
-        subtitle={total === 0 ? 'No scans yet' : `${total} scan${total !== 1 ? 's' : ''} total`}
+        title={t('title')}
+        subtitle={total === 0 ? t('noScansYet') : t('totalCount', { count: total })}
       />
 
       <div className="p-7">
@@ -59,9 +62,9 @@ export default async function ScansPage({
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </div>
-            <p className="text-slate-500 text-sm mb-4">No scans yet. Run one from the dashboard.</p>
+            <p className="text-slate-500 text-sm mb-4">{t('emptyMessage')}</p>
             <Link href="/dashboard" className="text-sm font-semibold text-emerald-600 hover:underline">
-              Go to Dashboard →
+              {t('goToDashboard')}
             </Link>
           </div>
         ) : (
@@ -69,11 +72,11 @@ export default async function ScansPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">URL</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Date</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Score</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Errors</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Warnings</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableUrl')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableDate')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableScore')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableErrors')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableWarnings')}</th>
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
@@ -85,7 +88,7 @@ export default async function ScansPage({
                       <div className="text-xs text-slate-400 truncate max-w-[280px]">{s.url}</div>
                     </td>
                     <td className="px-4 py-3.5 text-xs text-slate-400 whitespace-nowrap">
-                      {formatDate(s.created_at)}
+                      {formatDate(s.created_at, locale)}
                     </td>
                     <td className="px-4 py-3.5">
                       <span className={`font-bold text-sm ${scoreColor(s.score)}`}>{s.score}</span>
@@ -105,7 +108,7 @@ export default async function ScansPage({
                         href={`/dashboard/scans/${s.id}`}
                         className="text-xs font-semibold text-emerald-600 hover:underline whitespace-nowrap"
                       >
-                        View report →
+                        {t('viewReport')}
                       </Link>
                     </td>
                   </tr>
@@ -116,7 +119,7 @@ export default async function ScansPage({
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50">
                 <p className="text-xs text-slate-400">
-                  Showing {offset + 1}–{Math.min(offset + PAGE_SIZE, total)} of {total}
+                  {t('showing', { from: offset + 1, to: Math.min(offset + PAGE_SIZE, total), total })}
                 </p>
                 <div className="flex gap-2">
                   {page > 1 && (
@@ -124,7 +127,7 @@ export default async function ScansPage({
                       href={`/dashboard/scans?page=${page - 1}`}
                       className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-white transition"
                     >
-                      ← Prev
+                      {t('prev')}
                     </Link>
                   )}
                   <span className="px-3 py-1.5 text-xs text-slate-400">
@@ -135,7 +138,7 @@ export default async function ScansPage({
                       href={`/dashboard/scans?page=${page + 1}`}
                       className="px-3 py-1.5 text-xs font-semibold border border-slate-200 rounded-lg text-slate-600 hover:bg-white transition"
                     >
-                      Next →
+                      {t('next')}
                     </Link>
                   )}
                 </div>

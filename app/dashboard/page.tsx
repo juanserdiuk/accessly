@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import Topbar from '@/components/dashboard/Topbar'
 import MetricCard from '@/components/dashboard/MetricCard'
 import QuickScan from '@/components/dashboard/QuickScan'
@@ -17,15 +18,15 @@ function hostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
 
-function relativeTime(iso: string) {
+function relativeTime(iso: string, t: (k: string, p?: any) => string) {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
   const hours = Math.floor(mins / 60)
   const days = Math.floor(hours / 24)
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days === 1) return 'Yesterday'
-  return `${days}d ago`
+  if (mins < 60) return t('minutesAgo', { count: mins })
+  if (hours < 24) return t('hoursAgo', { count: hours })
+  if (days === 1) return t('yesterday')
+  return t('daysAgo', { count: days })
 }
 
 function scoreColor(score: number) {
@@ -40,12 +41,12 @@ function scoreBadgeBg(score: number) {
   return 'bg-red-50 text-red-500'
 }
 
-function ScoreChart({ scans }: { scans: Scan[] }) {
+function ScoreChart({ scans, locale }: { scans: Scan[]; locale: string }) {
   if (scans.length < 2) return null
   const chrono = [...scans].reverse()
   const scores = chrono.map(s => s.score)
   const labels = chrono.map(s =>
-    new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    new Date(s.created_at).toLocaleDateString(locale, { month: 'short', day: 'numeric' })
   )
 
   const W = 500, H = 140, PL = 20, PR = 10, PT = 10, PB = 24
@@ -86,19 +87,20 @@ function ScoreChart({ scans }: { scans: Scan[] }) {
   )
 }
 
-function EmptyState() {
+async function EmptyState() {
+  const t = await getTranslations('dashboard.home')
   return (
     <div className="flex-1 overflow-y-auto">
-      <Topbar title="Dashboard" />
+      <Topbar title={t('title')} />
       <div className="flex flex-col items-center justify-center min-h-[70vh] p-8 text-center">
         <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
         </div>
-        <h2 className="font-serif text-2xl text-slate-900 mb-2">No scans yet</h2>
+        <h2 className="font-serif text-2xl text-slate-900 mb-2">{t('emptyTitle')}</h2>
         <p className="text-slate-500 text-sm mb-8 max-w-sm leading-relaxed">
-          Run your first accessibility audit to see your score, issues, and recommendations.
+          {t('emptySub')}
         </p>
         <div className="w-full max-w-md">
           <QuickScan />
@@ -109,6 +111,9 @@ function EmptyState() {
 }
 
 export default async function DashboardPage() {
+  const t = await getTranslations('dashboard.home')
+  const tTime = await getTranslations('dashboard.time')
+  const locale = await getLocale()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -141,32 +146,32 @@ export default async function DashboardPage() {
   const ringScore = latest.score
   const circumference = 2 * Math.PI * 52
 
-  const todayLabel = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  const todayLabel = now.toLocaleDateString(locale, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <Topbar title="Dashboard" subtitle={`${todayLabel} · Last scan ${relativeTime(latest.created_at)}`} />
+      <Topbar title={t('title')} subtitle={`${todayLabel} · ${t('lastScan', { time: relativeTime(latest.created_at, tTime) })}`} />
 
       <div className="p-7 space-y-5">
 
         {/* Metrics */}
         <div className="grid grid-cols-4 gap-4">
-          <MetricCard label="Avg score" value={avgScore} trendUp iconBg="bg-emerald-50" icon={
+          <MetricCard label={t('metricAvgScore')} value={avgScore} trendUp iconBg="bg-emerald-50" icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
               <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
             </svg>
           } />
-          <MetricCard label="Open errors" value={openErrors} iconBg="bg-red-50" icon={
+          <MetricCard label={t('metricOpenErrors')} value={openErrors} iconBg="bg-red-50" icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
           } />
-          <MetricCard label="Scans this month" value={scansThisMonth} trendUp iconBg="bg-blue-50" icon={
+          <MetricCard label={t('metricScansThisMonth')} value={scansThisMonth} trendUp iconBg="bg-blue-50" icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-500">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
           } />
-          <MetricCard label="Sites scanned" value={distinctSites} trendNeutral iconBg="bg-slate-50" icon={
+          <MetricCard label={t('metricSitesScanned')} value={distinctSites} trendNeutral iconBg="bg-slate-50" icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500">
               <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -179,18 +184,18 @@ export default async function DashboardPage() {
           <div className="col-span-2 bg-white border border-slate-200 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="font-semibold text-slate-900">Score trend</div>
-                <div className="text-xs text-slate-400 mt-0.5">Accessibility score across your last {chartScans.length} scans</div>
+                <div className="font-semibold text-slate-900">{t('scoreTrend')}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{t('scoreTrendSub', { count: chartScans.length })}</div>
               </div>
             </div>
             {chartScans.length >= 2
-              ? <ScoreChart scans={chartScans} />
-              : <div className="text-sm text-slate-400 text-center py-8">Run a second scan to see your trend</div>
+              ? <ScoreChart scans={chartScans} locale={locale} />
+              : <div className="text-sm text-slate-400 text-center py-8">{t('needSecondScan')}</div>
             }
           </div>
 
           <div className="bg-white border border-slate-200 rounded-2xl p-5">
-            <div className="font-semibold text-slate-900 mb-1">Latest scan</div>
+            <div className="font-semibold text-slate-900 mb-1">{t('latestScan')}</div>
             <div className="text-xs text-slate-400 mb-5 truncate">{hostname(latest.url)}</div>
             <div className="flex flex-col items-center">
               <div className="relative w-32 h-32 mb-5">
@@ -207,9 +212,9 @@ export default async function DashboardPage() {
                 </div>
               </div>
               {[
-                ['Errors', latest.errors, 'bg-red-400'],
-                ['Warnings', latest.warnings, 'bg-amber-400'],
-                ['Passes', latest.passes, 'bg-green-500'],
+                [t('errorsLabel'), latest.errors, 'bg-red-400'],
+                [t('warningsLabel'), latest.warnings, 'bg-amber-400'],
+                [t('passesLabel'), latest.passes, 'bg-green-500'],
               ].map(([l, v, c]) => (
                 <div key={String(l)} className="flex items-center justify-between w-full mb-2 text-sm">
                   <div className="flex items-center gap-2 text-slate-500">
@@ -227,17 +232,17 @@ export default async function DashboardPage() {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
             <div>
-              <div className="font-semibold text-slate-900">Recent scans</div>
-              <div className="text-xs text-slate-400 mt-0.5">Last {recentScans.length} results</div>
+              <div className="font-semibold text-slate-900">{t('recentScans')}</div>
+              <div className="text-xs text-slate-400 mt-0.5">{t('lastResults', { count: recentScans.length })}</div>
             </div>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">URL</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">When</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Issues</th>
-                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Score</th>
+                <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableUrl')}</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableWhen')}</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableIssues')}</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableScore')}</th>
               </tr>
             </thead>
             <tbody>
@@ -247,7 +252,7 @@ export default async function DashboardPage() {
                     <div className="font-medium text-slate-800 truncate max-w-[220px]">{hostname(s.url)}</div>
                     <div className="text-xs text-slate-400 truncate max-w-[220px]">{s.url}</div>
                   </td>
-                  <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{relativeTime(s.created_at)}</td>
+                  <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{relativeTime(s.created_at, tTime)}</td>
                   <td className="px-3 py-3">
                     <div className="flex gap-1.5">
                       <span className="text-xs font-bold bg-red-50 text-red-500 px-2 py-0.5 rounded-full">{s.errors}E</span>
@@ -265,8 +270,8 @@ export default async function DashboardPage() {
 
         {/* Quick scan */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
-          <div className="font-semibold text-slate-900 mb-1">Quick scan</div>
-          <div className="text-xs text-slate-400 mb-4">Run an instant accessibility audit on any URL</div>
+          <div className="font-semibold text-slate-900 mb-1">{t('quickScan')}</div>
+          <div className="text-xs text-slate-400 mb-4">{t('quickScanSub')}</div>
           <QuickScan />
         </div>
 
