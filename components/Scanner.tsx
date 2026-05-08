@@ -23,7 +23,7 @@ interface ScanResults {
   score: number
 }
 
-export default function Scanner() {
+export default function Scanner({ unlimited = false }: { unlimited?: boolean }) {
   const [url, setUrl] = useState('')
   const [scanning, setScanning] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -34,9 +34,10 @@ export default function Scanner() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
+    if (unlimited) return
     const stored = parseInt(localStorage.getItem(STORAGE_KEY) ?? '0', 10)
     setScanCount(stored)
-  }, [])
+  }, [unlimited])
 
   function startProgressTimer() {
     setProgress(0)
@@ -53,7 +54,7 @@ export default function Scanner() {
   }
 
   async function runScan() {
-    if (!url || scanCount >= SCAN_LIMIT) return
+    if (!url || (!unlimited && scanCount >= SCAN_LIMIT)) return
     const normalized = /^https?:\/\//i.test(url) ? url : 'https://' + url
     if (normalized !== url) setUrl(normalized)
     setDone(false)
@@ -75,9 +76,11 @@ export default function Scanner() {
         setScanning(false)
         return
       }
-      const newCount = scanCount + 1
-      localStorage.setItem(STORAGE_KEY, String(newCount))
-      setScanCount(newCount)
+      if (!unlimited) {
+        const newCount = scanCount + 1
+        localStorage.setItem(STORAGE_KEY, String(newCount))
+        setScanCount(newCount)
+      }
       stopProgressTimer()
       setProgress(100)
       setResults(data)
@@ -111,14 +114,14 @@ export default function Scanner() {
 
       {/* Panel body */}
       <div className="p-6 flex-1 flex flex-col">
-        {scanCount >= SCAN_LIMIT ? (
+        {!unlimited && scanCount >= SCAN_LIMIT ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
             <div className="w-12 h-12 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center mb-4">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-400">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
             </div>
-            <p className="text-slate-700 font-medium mb-1">You've used your 3 free scans</p>
+            <p className="text-slate-700 font-medium mb-1">You&apos;ve used your 3 free scans</p>
             <p className="text-sm text-slate-400 mb-5">Sign up for unlimited scans.</p>
             <Link href="/signup" className="bg-emerald-400 text-slate-900 font-semibold px-5 py-2.5 rounded-xl hover:bg-emerald-300 transition text-sm">
               Create free account →
@@ -145,9 +148,11 @@ export default function Scanner() {
                 {scanning ? 'Scanning…' : 'Scan now'}
               </button>
             </div>
-            <p className="text-xs text-slate-400 mt-2 mb-4">
-              {SCAN_LIMIT - scanCount} free scan{SCAN_LIMIT - scanCount !== 1 ? 's' : ''} remaining
-            </p>
+            {!unlimited && (
+              <p className="text-xs text-slate-400 mt-2 mb-4">
+                {SCAN_LIMIT - scanCount} free scan{SCAN_LIMIT - scanCount !== 1 ? 's' : ''} remaining
+              </p>
+            )}
           </>
         )}
 

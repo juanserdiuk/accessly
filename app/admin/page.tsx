@@ -32,7 +32,6 @@ export default async function AdminPage() {
   const supabase = createAdminClient()
 
   const [
-    totalUsersRes,
     totalScansRes,
     proCountRes,
     agencyCountRes,
@@ -41,7 +40,6 @@ export default async function AdminPage() {
     allProfilesRes,
     usersRes,
   ] = await Promise.all([
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
     supabase.from('scans').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'agency'),
@@ -55,7 +53,8 @@ export default async function AdminPage() {
     supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ])
 
-  const totalUsers = totalUsersRes.count ?? 0
+  const allUsers = usersRes.data?.users ?? []
+  const totalUsers = allUsers.length
   const totalScans = totalScansRes.count ?? 0
   const proCount = proCountRes.count ?? 0
   const agencyCount = agencyCountRes.count ?? 0
@@ -67,7 +66,6 @@ export default async function AdminPage() {
   const planMap: Record<string, string> = Object.fromEntries(
     (allProfilesRes.data ?? []).map(p => [p.id, p.plan])
   )
-  const allUsers = usersRes.data?.users ?? []
   const userEmailMap: Record<string, string> = Object.fromEntries(
     allUsers.map(u => [u.id, u.email ?? '—'])
   )
