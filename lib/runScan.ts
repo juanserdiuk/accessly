@@ -1,5 +1,4 @@
-import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium'
+import puppeteer, { Browser } from 'puppeteer-core'
 
 export type ScanNode = {
   html: string
@@ -26,59 +25,21 @@ export type ScanResult = {
   score: number
 }
 
-const LAUNCH_ARGS = [
-  '--no-sandbox',
-  '--disable-setuid-sandbox',
-  '--disable-dev-shm-usage',
-  '--disable-gpu',
-  '--single-process',
-  '--no-zygote',
-]
-
-async function resolveExecutablePath(): Promise<string> {
-  // 1. Explicit env var override — set PUPPETEER_EXECUTABLE_PATH in Vercel
-  //    settings to use any pre-installed Chrome binary.
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-    console.log('[runScan] using PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH)
-    return process.env.PUPPETEER_EXECUTABLE_PATH
-  }
-
-  // 2. @sparticuz/chromium — binary is bundled in node_modules, no download needed.
-  try {
-    chromium.setGraphicsMode = false
-    const path = await chromium.executablePath()
-    console.log('[runScan] chromium resolved:', path)
-    return path
-  } catch (err) {
-    console.error('[runScan] chromium.executablePath() failed:', err)
+async function getBrowser(): Promise<Browser> {
+  const token = process.env.BROWSERLESS_API_KEY
+  if (!token) {
     throw new Error(
-      'Browser binary unavailable. Set PUPPETEER_EXECUTABLE_PATH in your Vercel environment variables.'
+      'BROWSERLESS_API_KEY is not set. Add it to your environment variables.'
     )
   }
-}
 
-async function getBrowser() {
-  if (process.env.NODE_ENV === 'development') {
-    const { executablePath } = await import('puppeteer')
-    return puppeteer.launch({
-      executablePath: await executablePath(),
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    })
-  }
-
-  const executablePath = await resolveExecutablePath()
-
-  return puppeteer.launch({
-    executablePath,
-    headless: true,
-    args: chromium.args,
-    timeout: 30000,
+  return puppeteer.connect({
+    browserWSEndpoint: `wss://production-sfo.browserless.io?token=${token}`,
   })
 }
 
 export async function runScan(url: string): Promise<ScanResult> {
-  let browser
+  let browser: Browser | undefined
   try {
     browser = await getBrowser()
     const page = await browser.newPage()
