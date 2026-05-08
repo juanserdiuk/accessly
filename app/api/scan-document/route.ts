@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import path from 'path'
 
 interface Check {
   id: string
@@ -10,46 +11,89 @@ interface Check {
 }
 
 async function checkPdf(buffer: Buffer): Promise<Check[]> {
-  const { PDFParse, PasswordException } = await import('pdf-parse')
+  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
 
-  const parser = new PDFParse({ data: new Uint8Array(buffer) })
+  // pdfjs-dist v5 requires a real worker — resolve path from project root
+  const workerPath = path.resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'file://' + workerPath
 
-  let info: Record<string, string> = {}
-  let text = ''
-  let numpages = 1
-  let hasOutline = false
-  let pageLinks: Array<{ text: string; url: string }> = []
-
+  let doc: Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>
   try {
-    const [infoResult, textResult] = await Promise.all([
-      parser.getInfo({ parsePageInfo: true }),
-      parser.getText(),
-    ])
-    info = (infoResult.info ?? {}) as Record<string, string>
-    text = (textResult.text ?? '').trim()
-    numpages = infoResult.total ?? 1
-    hasOutline = Array.isArray(infoResult.outline) && infoResult.outline.length > 0
-    pageLinks = (infoResult.pages ?? []).flatMap((p: { links?: Array<{ text: string; url: string }> }) => p.links ?? [])
-  } catch (err) {
-    if (err instanceof PasswordException) {
+    doc = await pdfjsLib.getDocument({
+      data: new Uint8Array(buffer),
+      useSystemFonts: true,
+      disableFontFace: true,
+      verbosity: 0,
+    }).promise
+  } catch (err: any) {
+    if (err?.name === 'PasswordException') {
       throw new Error('This PDF is password-protected. Remove the password protection and re-upload to check accessibility.')
     }
     throw new Error("We couldn't read this document. Make sure it's a valid, non-corrupted PDF.")
-  } finally {
-    await parser.destroy().catch(() => {})
   }
 
-  // Heading heuristic: a document with structure will have some short lines
-  // (headings, section titles) mixed among longer paragraph lines.
+  // Metadata (Title, Language)
+  let info: Record<string, string> = {}
+  try {
+    const meta = await doc.getMetadata()
+    info = (meta.info ?? {}) as Record<string, string>
+  } catch {}
+
+  // Bookmarks / outline
+  let hasOutline = false
+  try {
+    const outline = await doc.getOutline()
+    hasOutline = Array.isArray(outline) && outline.length > 0
+  } catch {}
+
+  const numpages = doc.numPages
+
+  // Extract text + link annotations from all pages
+  let text = ''
+  const pageLinks: Array<{ contents: string; url: string }> = []
+
+  for (let i = 1; i <= numpages; i++) {
+    let page: Awaited<ReturnType<typeof doc.getPage>>
+    try {
+      page = await doc.getPage(i)
+    } catch {
+      continue
+    }
+
+    try {
+      const content = await page.getTextContent()
+      const pageText = content.items
+        .filter((item): item is typeof item & { str: string } => 'str' in item)
+        .map(item => item.str)
+        .join(' ')
+      if (pageText.trim()) text += (text ? '\n' : '') + pageText
+    } catch {}
+
+    try {
+      const annotations = await page.getAnnotations()
+      for (const ann of annotations) {
+        if (ann.subtype === 'Link' && ann.url) {
+          pageLinks.push({
+            contents: (ann.contentsObj as any)?.str ?? ann.contents ?? '',
+            url: ann.url,
+          })
+        }
+      }
+    } catch {}
+  }
+
+  text = text.trim()
+
+  // Heading heuristic: structural docs have short lines mixed with long ones
   const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
   const shortLines = nonEmptyLines.filter(l => l.length <= 60)
   const hasLikelyHeadings = nonEmptyLines.length < 5 || shortLines.length >= 2
 
-  // Descriptive link text check
+  // Descriptive link-text check: links with no contents and no descriptive label
   const poorTexts = new Set(['here', 'click here', 'read more', 'more', 'link', 'this', 'learn more'])
   const poorLinks = pageLinks.filter(l => {
-    const t = l.text.trim().toLowerCase()
-    return t === '' || poorTexts.has(t) || /^https?:\/\//i.test(l.text.trim())
+    const t = l.contents.trim().toLowerCase()
+    return t === '' || poorTexts.has(t) || /^https?:\/\//i.test(l.contents.trim())
   })
 
   return [
@@ -133,7 +177,6 @@ async function checkDocx(buffer: Buffer): Promise<Check[]> {
   }
 
   const html = result.value
-  // Read raw bytes as latin1 to safely grep XML fragments
   const raw = buffer.toString('latin1').slice(0, 120_000)
 
   const titleMatch = raw.match(/dc:title>([^<]{1,200})</)
