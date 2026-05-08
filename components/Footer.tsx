@@ -1,8 +1,10 @@
 'use client'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function Footer() {
+  const t = useTranslations('footer')
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
@@ -24,18 +26,22 @@ export default function Footer() {
     }
   }
 
+  const footerLinks = [
+    { label: t('features'), href: '/#features' },
+    { label: t('pricing'),  href: '/#pricing'  },
+    { label: t('privacy'),  href: '/privacy'   },
+    { label: t('terms'),    href: '/terms'      },
+  ]
+
   return (
     <footer className="bg-slate-900">
       {/* Contact section */}
       <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-white/10">
         {/* Left: info */}
         <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-3">Contact</p>
-          <h2 className="font-serif text-3xl text-white mb-3">Get in touch</h2>
-          <p className="text-white/50 text-sm leading-relaxed mb-8">
-            Have a question or want to learn more?{' '}
-            We&apos;d love to hear from you.
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-3">{t('contactLabel')}</p>
+          <h2 className="font-serif text-3xl text-white mb-3">{t('headline')}</h2>
+          <p className="text-white/50 text-sm leading-relaxed mb-8">{t('sub')}</p>
           <div className="space-y-4">
             <a
               href="mailto:juanserdiuk@juanserdiuk.com"
@@ -67,7 +73,7 @@ export default function Footer() {
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
               </span>
-              We typically respond within 1 business day
+              {t('responseTime')}
             </div>
           </div>
         </div>
@@ -81,48 +87,48 @@ export default function Footer() {
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <p className="text-white font-medium mb-1">Message sent!</p>
-              <p className="text-white/40 text-sm">We&apos;ll get back to you soon.</p>
+              <p className="text-white font-medium mb-1">{t('sentTitle')}</p>
+              <p className="text-white/40 text-sm">{t('sentSub')}</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-white/40 mb-1.5">Name</label>
+                  <label className="block text-xs font-medium text-white/40 mb-1.5">{t('nameLabel')}</label>
                   <input
                     type="text"
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    placeholder="Your name"
+                    placeholder={t('namePlaceholder')}
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-400/50 transition"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-white/40 mb-1.5">Email</label>
+                  <label className="block text-xs font-medium text-white/40 mb-1.5">{t('emailLabel')}</label>
                   <input
                     type="email"
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    placeholder="you@example.com"
+                    placeholder={t('emailPlaceholder')}
                     required
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-400/50 transition"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-white/40 mb-1.5">Message</label>
+                <label className="block text-xs font-medium text-white/40 mb-1.5">{t('messageLabel')}</label>
                 <textarea
                   value={form.message}
                   onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                  placeholder="Tell us how we can help…"
+                  placeholder={t('messagePlaceholder')}
                   required
                   rows={5}
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-emerald-400/50 transition resize-none"
                 />
               </div>
               {status === 'error' && (
-                <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>
+                <p className="text-red-400 text-xs">{t('error')}</p>
               )}
               <button
                 type="submit"
@@ -132,9 +138,9 @@ export default function Footer() {
                 {status === 'sending' ? (
                   <>
                     <span className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                    Sending…
+                    {t('sending')}
                   </>
-                ) : 'Send message'}
+                ) : t('send')}
               </button>
             </form>
           )}
@@ -150,16 +156,11 @@ export default function Footer() {
           Accessly
         </Link>
         <div className="flex gap-6">
-          {[
-            { label: 'Features', href: '/#features' },
-            { label: 'Pricing',  href: '/#pricing'  },
-            { label: 'Privacy',  href: '/privacy'   },
-            { label: 'Terms',    href: '/terms'      },
-          ].map(({ label, href }) => (
+          {footerLinks.map(({ label, href }) => (
             <Link key={label} href={href} className="text-sm text-white/40 hover:text-white/80 transition">{label}</Link>
           ))}
         </div>
-        <p className="text-sm text-white/30">© 2026 Accessly. All rights reserved.</p>
+        <p className="text-sm text-white/30">{t('copyright')}</p>
       </div>
     </footer>
   )

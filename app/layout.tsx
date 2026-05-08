@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Bricolage_Grotesque } from 'next/font/google'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
 
 const inter = Inter({
@@ -65,10 +67,17 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale()
+  const messages = await getMessages()
+
   return (
-    <html lang="en" className={`${inter.variable} ${bricolage.variable}`}>
-      <body suppressHydrationWarning>{children}</body>
+    <html lang={locale} className={`${inter.variable} ${bricolage.variable}`}>
+      <body suppressHydrationWarning>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
+      </body>
     </html>
   )
 }

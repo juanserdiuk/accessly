@@ -1,11 +1,10 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
+import createNextIntlPlugin from 'next-intl/plugin'
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ['@sparticuz/chromium', '@sparticuz/chromium-min', 'puppeteer-core'],
-
-  experimental: {
-    serverComponentsExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
-  },
+  serverExternalPackages: ['@sparticuz/chromium', '@sparticuz/chromium-min', 'puppeteer-core', 'pdfjs-dist'],
 
   turbopack: {},
 
@@ -13,6 +12,6 @@ const nextConfig: NextConfig = {
     config.externals = [...(config.externals || []), '@sparticuz/chromium', 'puppeteer-core']
     return config
   },
-};
+}
 
-export default nextConfig;
+export default withNextIntl(nextConfig)

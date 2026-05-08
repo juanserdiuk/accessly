@@ -1,17 +1,20 @@
 'use client'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-
-const NAV_LINKS = [
-  { label: 'Scanner', href: '#scanner' },
-  { label: 'Features', href: '#features' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'Sign in', href: '/login' },
-]
+import { useTranslations } from 'next-intl'
+import LanguageSwitcher from './LanguageSwitcher'
 
 export default function Nav() {
+  const t = useTranslations('nav')
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+
+  const NAV_LINKS = [
+    { label: t('scanner'),  href: '#scanner'  },
+    { label: t('features'), href: '#features' },
+    { label: t('pricing'),  href: '#pricing'  },
+    { label: t('signIn'),   href: '/login'    },
+  ]
 
   useEffect(() => {
     function onScroll() {
@@ -21,7 +24,6 @@ export default function Nav() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
@@ -43,21 +45,25 @@ export default function Nav() {
             {NAV_LINKS.map(({ label, href }) => (
               <Link key={label} href={href} className="text-sm text-slate-500 hover:text-slate-900 transition">{label}</Link>
             ))}
+            <LanguageSwitcher />
             <Link href="/signup" className="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-slate-700 transition">
-              Start free
+              {t('startFree')}
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setOpen(o => !o)}
-            aria-label={open ? 'Close menu' : 'Open menu'}
-            className="lg:hidden flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
-          >
-            <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
-            <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 ${open ? 'w-0 opacity-0' : 'w-5'}`} />
-            <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
-          </button>
+          {/* Mobile: language switcher + hamburger */}
+          <div className="lg:hidden flex items-center gap-2">
+            <LanguageSwitcher />
+            <button
+              onClick={() => setOpen(o => !o)}
+              aria-label={open ? t('closeMenu') : t('openMenu')}
+              className="flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
+            >
+              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
+              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 ${open ? 'w-0 opacity-0' : 'w-5'}`} />
+              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -91,7 +97,7 @@ export default function Nav() {
             }}
             className="mt-8 bg-emerald-400 text-slate-900 text-base font-bold px-6 py-4 rounded-xl hover:bg-emerald-300 transition-all duration-500 text-center"
           >
-            Start free
+            {t('startFree')}
           </Link>
         </div>
       </div>
