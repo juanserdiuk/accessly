@@ -27,7 +27,7 @@ export default function Footer() {
   return (
     <footer className="bg-slate-900">
       {/* Contact section */}
-      <div className="max-w-6xl mx-auto px-6 py-16 grid md:grid-cols-2 gap-12 border-b border-white/10">
+      <div className="max-w-6xl mx-auto px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-12 border-b border-white/10">
         {/* Left: info */}
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-emerald-400 mb-3">Contact</p>
