@@ -31,6 +31,19 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(result)
   } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Scan failed' }, { status: 500 })
+    const msg: string = err?.message ?? 'Scan failed'
+    const isBrowserError =
+      msg.includes('Browser binary') ||
+      msg.includes('executablePath') ||
+      msg.includes('chromium') ||
+      msg.includes('Failed to launch')
+    return NextResponse.json(
+      {
+        error: isBrowserError
+          ? 'The scanner is temporarily unavailable. Please try again in a moment.'
+          : msg,
+      },
+      { status: 500 }
+    )
   }
 }

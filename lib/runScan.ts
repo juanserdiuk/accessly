@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core'
-import chromium from '@sparticuz/chromium-min'
+import chromium from '@sparticuz/chromium'
 
 export type ScanNode = {
   html: string
@@ -26,12 +26,36 @@ export type ScanResult = {
   score: number
 }
 
-// chromium-min does not bundle the binary. On production we download the
-// pack from a remote URL (GitHub releases or a custom CDN set via env var)
-// and cache it in /tmp. Subsequent warm invocations skip the download.
-const CHROMIUM_PACK_URL =
-  process.env.CHROMIUM_REMOTE_EXEC_PATH ??
-  'https://github.com/Sparticuz/chromium/releases/download/v148.0.0/chromium-v148.0.0-pack.tar'
+const LAUNCH_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-gpu',
+  '--single-process',
+  '--no-zygote',
+]
+
+async function resolveExecutablePath(): Promise<string> {
+  // 1. Explicit env var override — set PUPPETEER_EXECUTABLE_PATH in Vercel
+  //    settings to use any pre-installed Chrome binary.
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    console.log('[runScan] using PUPPETEER_EXECUTABLE_PATH:', process.env.PUPPETEER_EXECUTABLE_PATH)
+    return process.env.PUPPETEER_EXECUTABLE_PATH
+  }
+
+  // 2. @sparticuz/chromium — binary is bundled in node_modules, no download needed.
+  try {
+    chromium.setGraphicsMode = false
+    const path = await chromium.executablePath()
+    console.log('[runScan] chromium resolved:', path)
+    return path
+  } catch (err) {
+    console.error('[runScan] chromium.executablePath() failed:', err)
+    throw new Error(
+      'Browser binary unavailable. Set PUPPETEER_EXECUTABLE_PATH in your Vercel environment variables.'
+    )
+  }
+}
 
 async function getBrowser() {
   if (process.env.NODE_ENV === 'development') {
@@ -43,12 +67,13 @@ async function getBrowser() {
     })
   }
 
-  chromium.setGraphicsMode = false
+  const executablePath = await resolveExecutablePath()
 
   return puppeteer.launch({
-    executablePath: await chromium.executablePath(CHROMIUM_PACK_URL),
+    executablePath,
     headless: true,
     args: chromium.args,
+    timeout: 30000,
   })
 }
 
