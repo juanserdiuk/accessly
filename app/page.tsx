@@ -1,7 +1,7 @@
 import Nav from '@/components/Nav'
 import Hero from '@/components/Hero'
 import HowItWorks from '@/components/HowItWorks'
-import Scanner from '@/components/Scanner'
+import ScanSection from '@/components/ScanSection'
 import Features from '@/components/Features'
 import Testimonials from '@/components/Testimonials'
 import Pricing from '@/components/Pricing'
@@ -13,7 +13,7 @@ export default function Home() {
       <Nav />
       <Hero />
       <HowItWorks />
-      <Scanner />
+      <ScanSection />
       <Features />
       <Testimonials />
       <Pricing />
