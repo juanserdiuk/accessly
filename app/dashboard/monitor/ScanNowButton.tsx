@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 export default function ScanNowButton({ url }: { url: string }) {
+  const t = useTranslations('dashboard.monitor')
   const [scanning, setScanning] = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const router = useRouter()
@@ -19,12 +21,12 @@ export default function ScanNowButton({ url }: { url: string }) {
       })
       const data = await res.json()
       if (!res.ok || data.error) {
-        setError(data.error ?? 'Scan failed')
+        setError(data.error ?? t('scanFailed'))
       } else {
         router.refresh()
       }
     } catch {
-      setError('Network error')
+      setError(t('networkError'))
     } finally {
       setScanning(false)
     }
@@ -45,7 +47,7 @@ export default function ScanNowButton({ url }: { url: string }) {
               stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
-            Scanning…
+            {t('scanning')}
           </>
         ) : (
           <>
@@ -53,7 +55,7 @@ export default function ScanNowButton({ url }: { url: string }) {
               strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="5 3 19 12 5 21 5 3"/>
             </svg>
-            Scan now
+            {t('scanNow')}
           </>
         )}
       </button>

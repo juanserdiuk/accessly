@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import Link from 'next/link'
 import Topbar from '@/components/dashboard/Topbar'
 import AddSiteForm from './AddSiteForm'
@@ -12,16 +13,16 @@ function getHostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
 
-function relativeDate(iso: string) {
+function relativeDate(iso: string, t: (k: string, p?: any) => string, locale: string) {
   const diff  = Date.now() - new Date(iso).getTime()
   const mins  = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days  = Math.floor(diff / 86_400_000)
-  if (mins  < 1)  return 'just now'
-  if (mins  < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days  <  7) return `${days}d ago`
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (mins  < 1)  return t('justNow')
+  if (mins  < 60) return t('minutesAgo', { count: mins })
+  if (hours < 24) return t('hoursAgo', { count: hours })
+  if (days  <  7) return t('daysAgo', { count: days })
+  return new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric' })
 }
 
 function scoreColor(score: number) {
@@ -45,7 +46,7 @@ function ScoreRing({ score }: { score: number }) {
   )
 }
 
-function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
+function SiteRow({ site, scan, t, tTime, locale }: { site: Site; scan: Scan | null; t: (k: string, p?: any) => string; tTime: (k: string, p?: any) => string; locale: string }) {
   const host = getHostname(site.url)
 
   return (
@@ -76,9 +77,9 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
       {/* Last scanned */}
       <div className="shrink-0 text-center hidden sm:block">
         <div className="text-sm text-slate-600 font-medium">
-          {scan ? relativeDate(scan.created_at) : 'Never'}
+          {scan ? relativeDate(scan.created_at, tTime, locale) : t('never')}
         </div>
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">Last scanned</div>
+        <div className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">{t('lastScanned')}</div>
       </div>
 
       {/* Errors */}
@@ -86,7 +87,7 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
         <div className={`text-lg font-semibold ${scan ? 'text-red-500' : 'text-slate-300'}`}>
           {scan?.errors ?? '–'}
         </div>
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Errors</div>
+        <div className="text-[10px] text-slate-400 uppercase tracking-wider">{t('errorsLabel')}</div>
       </div>
 
       {/* Warnings */}
@@ -94,7 +95,7 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
         <div className={`text-lg font-semibold ${scan ? 'text-amber-500' : 'text-slate-300'}`}>
           {scan?.warnings ?? '–'}
         </div>
-        <div className="text-[10px] text-slate-400 uppercase tracking-wider">Warnings</div>
+        <div className="text-[10px] text-slate-400 uppercase tracking-wider">{t('warningsLabel')}</div>
       </div>
 
       {/* View report link */}
@@ -103,7 +104,7 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
           href={`/dashboard/scans/${scan.id}`}
           className="shrink-0 text-xs font-semibold text-slate-400 hover:text-slate-700 transition hidden sm:block whitespace-nowrap"
         >
-          View report →
+          {t('viewReport')}
         </Link>
       )}
 
@@ -115,7 +116,7 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
         <input type="hidden" name="siteId" value={site.id} />
         <button
           type="submit"
-          title="Remove from watchlist"
+          title={t('removeTooltip')}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-300
             hover:text-red-500 hover:bg-red-50 transition shrink-0"
         >
@@ -131,6 +132,9 @@ function SiteRow({ site, scan }: { site: Site; scan: Scan | null }) {
 }
 
 export default async function MonitorPage() {
+  const t = await getTranslations('dashboard.monitor')
+  const tTime = await getTranslations('dashboard.time')
+  const locale = await getLocale()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -158,10 +162,10 @@ export default async function MonitorPage() {
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar
-        title="Monitor"
+        title={t('title')}
         subtitle={allSites.length > 0
-          ? `${allSites.length} site${allSites.length !== 1 ? 's' : ''} on your watchlist`
-          : 'Track sites and re-scan them any time'}
+          ? t('siteCount', { count: allSites.length })
+          : t('subtitleEmpty')}
       />
 
       <div className="p-7 max-w-4xl space-y-5">
@@ -169,7 +173,7 @@ export default async function MonitorPage() {
         {/* Add site card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-            Add a site to your watchlist
+            {t('addSection')}
           </p>
           <AddSiteForm />
         </div>
@@ -184,8 +188,8 @@ export default async function MonitorPage() {
                 <circle cx="12" cy="12" r="3"/>
               </svg>
             </div>
-            <p className="text-sm font-medium text-slate-700 mb-1">Your watchlist is empty</p>
-            <p className="text-xs text-slate-400">Add a URL above to start monitoring it.</p>
+            <p className="text-sm font-medium text-slate-700 mb-1">{t('emptyTitle')}</p>
+            <p className="text-xs text-slate-400">{t('emptySub')}</p>
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -194,6 +198,9 @@ export default async function MonitorPage() {
                 key={site.id}
                 site={site}
                 scan={latestByUrl.get(site.url) ?? null}
+                t={t}
+                tTime={tTime}
+                locale={locale}
               />
             ))}
           </div>

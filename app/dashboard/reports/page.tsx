@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import Link from 'next/link'
 import Topbar from '@/components/dashboard/Topbar'
 
@@ -24,16 +25,16 @@ function hostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
 
-function relativeDate(iso: string) {
+function relativeDate(iso: string, t: (k: string, p?: any) => string, locale: string) {
   const diff = Date.now() - new Date(iso).getTime()
   const mins  = Math.floor(diff / 60_000)
   const hours = Math.floor(diff / 3_600_000)
   const days  = Math.floor(diff / 86_400_000)
-  if (mins  < 1)  return 'just now'
-  if (mins  < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days  < 30) return `${days}d ago`
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  if (mins  < 1)  return t('justNow')
+  if (mins  < 60) return t('minutesAgo', { count: mins })
+  if (hours < 24) return t('hoursAgo', { count: hours })
+  if (days  < 30) return t('daysAgo', { count: days })
+  return new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric' })
 }
 
 function scoreColor(score: number) {
@@ -107,6 +108,9 @@ function DeltaBadge({ delta }: { delta: number | null }) {
 }
 
 export default async function ReportsPage() {
+  const t = await getTranslations('dashboard.reports')
+  const tTime = await getTranslations('dashboard.time')
+  const locale = await getLocale()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -149,7 +153,7 @@ export default async function ReportsPage() {
 
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
-      <Topbar title="Reports" subtitle="Score trends by domain" />
+      <Topbar title={t('title')} subtitle={t('subtitle')} />
 
       <div className="p-7 max-w-5xl space-y-5">
 
@@ -157,8 +161,7 @@ export default async function ReportsPage() {
         {domains.length > 0 && (
           <div className="flex items-center gap-4 text-sm">
             <span className="text-slate-500">
-              <span className="font-semibold text-slate-800">{domains.length}</span>{' '}
-              domain{domains.length !== 1 ? 's' : ''} tracked
+              {t('domainsTracked', { count: domains.length })}
             </span>
 
             {regressionCount > 0 && (
@@ -169,7 +172,7 @@ export default async function ReportsPage() {
                   <line x1="12" y1="8" x2="12" y2="12"/>
                   <line x1="12" y1="16" x2="12.01" y2="16"/>
                 </svg>
-                {regressionCount} regression{regressionCount !== 1 ? 's' : ''} detected
+                {t('regressionsDetected', { count: regressionCount })}
               </span>
             )}
 
@@ -179,7 +182,7 @@ export default async function ReportsPage() {
                   strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                All domains stable or improving
+                {t('allStable')}
               </span>
             )}
           </div>
@@ -197,20 +200,27 @@ export default async function ReportsPage() {
                 <line x1="16" y1="17" x2="8" y2="17"/>
               </svg>
             </div>
-            <p className="text-sm font-medium text-slate-700 mb-1">No scans yet</p>
-            <p className="text-xs text-slate-400 mb-5">Run your first scan to start tracking score trends.</p>
+            <p className="text-sm font-medium text-slate-700 mb-1">{t('emptyTitle')}</p>
+            <p className="text-xs text-slate-400 mb-5">{t('emptySub')}</p>
             <Link href="/dashboard"
               className="text-sm font-semibold bg-slate-900 text-white px-4 py-2 rounded-lg hover:bg-slate-700 transition">
-              Go to dashboard
+              {t('goToDashboard')}
             </Link>
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             {/* Header row */}
             <div className="grid grid-cols-[1fr_80px_96px_64px_120px_80px] gap-4 px-5 py-3 border-b border-slate-100 bg-slate-50">
-              {['Domain', 'Score', 'Change', 'Scans', 'Trend', ''].map(h => (
-                <span key={h} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                  {h}
+              {[
+                ['domain', t('tableDomain')],
+                ['score', t('tableScore')],
+                ['change', t('tableChange')],
+                ['scans', t('tableScans')],
+                ['trend', t('tableTrend')],
+                ['actions', ''],
+              ].map(([k, label]) => (
+                <span key={k} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                  {label}
                 </span>
               ))}
             </div>
@@ -233,11 +243,11 @@ export default async function ReportsPage() {
                         <span className="font-medium text-slate-800 text-sm truncate">{d.hostname}</span>
                         {regressed && (
                           <span className="shrink-0 text-[11px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
-                            Regression detected
+                            {t('regressionTag')}
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-slate-400">{relativeDate(d.latest.created_at)}</span>
+                      <span className="text-xs text-slate-400">{relativeDate(d.latest.created_at, tTime, locale)}</span>
                     </div>
 
                     {/* Latest score */}
@@ -260,7 +270,7 @@ export default async function ReportsPage() {
                         href={`/dashboard/scans/${d.latest.id}`}
                         className="text-xs font-semibold text-emerald-600 hover:underline whitespace-nowrap"
                       >
-                        Report →
+                        {t('report')}
                       </Link>
                     </div>
                   </div>

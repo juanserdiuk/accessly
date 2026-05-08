@@ -1,9 +1,12 @@
 'use client'
 
 import { useActionState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { addSite } from './actions'
 
 export default function AddSiteForm() {
+  const t = useTranslations('dashboard.monitor')
+  const tCommon = useTranslations('dashboard.common')
   const [state, action, pending] = useActionState(addSite, null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -21,7 +24,7 @@ export default function AddSiteForm() {
           ref={inputRef}
           name="url"
           type="url"
-          placeholder="https://example.com"
+          placeholder={tCommon('scanPlaceholder')}
           className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-white
             focus:outline-none focus:border-emerald-400 transition placeholder:text-slate-300"
         />
@@ -31,7 +34,7 @@ export default function AddSiteForm() {
           className="px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl
             hover:bg-slate-700 transition disabled:opacity-50 shrink-0"
         >
-          {pending ? 'Adding…' : 'Add site'}
+          {pending ? t('adding') : t('addSubmit')}
         </button>
       </div>
       {state?.error && (
