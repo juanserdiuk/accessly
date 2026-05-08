@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 const PLANS = {
   free:   { label: 'Free',   color: 'bg-slate-100 text-slate-600',   price: null },
@@ -16,6 +17,7 @@ interface Props {
 }
 
 export default function BillingSection({ plan, hasCustomer }: Props) {
+  const t = useTranslations('dashboard.settings')
   const [loading, setLoading] = useState<string | null>(null)
   const [error, setError]     = useState<string | null>(null)
 
@@ -32,9 +34,9 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else setError(data.error ?? 'Something went wrong')
+      else setError(data.error ?? t('billingGenericError'))
     } catch {
-      setError('Network error — please try again')
+      setError(t('billingNetworkError'))
     } finally {
       setLoading(null)
     }
@@ -47,9 +49,9 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
       const res  = await fetch('/api/stripe/portal', { method: 'POST' })
       const data = await res.json()
       if (data.url) window.location.href = data.url
-      else setError(data.error ?? 'Something went wrong')
+      else setError(data.error ?? t('billingGenericError'))
     } catch {
-      setError('Network error — please try again')
+      setError(t('billingNetworkError'))
     } finally {
       setLoading(null)
     }
@@ -72,13 +74,15 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
         {plan === 'free' && (
           <>
             <PlanButton
-              label="Upgrade to Pro – $29/mo"
+              label={t('billingUpgradePro')}
+              loadingLabel={t('billingLoading')}
               onClick={() => checkout('pro')}
               loading={loading === 'pro'}
               variant="primary"
             />
             <PlanButton
-              label="Upgrade to Agency – $99/mo"
+              label={t('billingUpgradeAgency')}
+              loadingLabel={t('billingLoading')}
               onClick={() => checkout('agency')}
               loading={loading === 'agency'}
               variant="outline"
@@ -89,14 +93,16 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
         {plan === 'pro' && (
           <>
             <PlanButton
-              label="Upgrade to Agency – $99/mo"
+              label={t('billingUpgradeAgency')}
+              loadingLabel={t('billingLoading')}
               onClick={() => checkout('agency')}
               loading={loading === 'agency'}
               variant="primary"
             />
             {hasCustomer && (
               <PlanButton
-                label="Manage subscription →"
+                label={t('billingManage')}
+                loadingLabel={t('billingLoading')}
                 onClick={manageSubscription}
                 loading={loading === 'portal'}
                 variant="outline"
@@ -107,7 +113,8 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
 
         {plan === 'agency' && hasCustomer && (
           <PlanButton
-            label="Manage subscription →"
+            label={t('billingManage')}
+            loadingLabel={t('billingLoading')}
             onClick={manageSubscription}
             loading={loading === 'portal'}
             variant="outline"
@@ -117,9 +124,9 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
 
       {/* Feature summary */}
       <div className="text-xs text-slate-400 space-y-1">
-        {plan === 'free'   && <p>Free includes 3 scans. Upgrade for unlimited scans, full reports, and team features.</p>}
-        {plan === 'pro'    && <p>Pro includes unlimited scans, full violation reports, and PDF exports.</p>}
-        {plan === 'agency' && <p>Agency includes everything in Pro plus white-label reports and priority support.</p>}
+        {plan === 'free'   && <p>{t('billingFreeBenefits')}</p>}
+        {plan === 'pro'    && <p>{t('billingProBenefits')}</p>}
+        {plan === 'agency' && <p>{t('billingAgencyBenefits')}</p>}
       </div>
 
       {error && <p className="text-sm text-red-500">{error}</p>}
@@ -128,9 +135,10 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
 }
 
 function PlanButton({
-  label, onClick, loading, variant,
+  label, loadingLabel, onClick, loading, variant,
 }: {
   label: string
+  loadingLabel: string
   onClick: () => void
   loading: boolean
   variant: 'primary' | 'outline'
@@ -142,7 +150,7 @@ function PlanButton({
 
   return (
     <button onClick={onClick} disabled={loading} className={styles}>
-      {loading ? 'Loading…' : label}
+      {loading ? loadingLabel : label}
     </button>
   )
 }

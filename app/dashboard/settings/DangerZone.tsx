@@ -1,16 +1,20 @@
 'use client'
 
 import { useActionState, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { deleteAccount } from './actions'
 
 export default function DangerZone() {
+  const t = useTranslations('dashboard.settings')
   const [expanded, setExpanded] = useState(false)
   const [state, action, pending] = useActionState(deleteAccount, null)
+
+  const confirmParts = t('deleteConfirmLabel', { word: '__WORD__' }).split('__WORD__')
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
-        Permanently delete your account and all associated scans. This cannot be undone.
+        {t('dangerLead')}
       </p>
 
       {!expanded ? (
@@ -19,17 +23,17 @@ export default function DangerZone() {
           className="px-4 py-2 text-sm font-semibold text-red-600 border border-red-200 rounded-lg
             hover:bg-red-50 transition"
         >
-          Delete account
+          {t('deleteAccount')}
         </button>
       ) : (
         <div className="border border-red-200 rounded-xl p-4 space-y-3 bg-red-50/40">
           <p className="text-sm font-medium text-red-700">
-            This will delete your account, all scans, and cancel any active subscription.
+            {t('deleteWarning')}
           </p>
           <form action={action} className="space-y-3">
             <div className="space-y-1.5">
               <label className="block text-xs font-medium text-red-700">
-                Type <span className="font-mono font-bold">DELETE</span> to confirm
+                {confirmParts[0]}<span className="font-mono font-bold">DELETE</span>{confirmParts[1]}
               </label>
               <input
                 name="confirm"
@@ -51,14 +55,14 @@ export default function DangerZone() {
                 className="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-lg
                   hover:bg-red-700 transition disabled:opacity-50"
               >
-                {pending ? 'Deleting…' : 'Delete my account'}
+                {pending ? t('deleting') : t('deleteSubmit')}
               </button>
               <button
                 type="button"
                 onClick={() => setExpanded(false)}
                 className="px-4 py-2 text-sm font-medium text-slate-500 hover:text-slate-700 transition"
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </form>

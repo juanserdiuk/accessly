@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface Props {
   apiKey: string | null
@@ -8,6 +9,7 @@ interface Props {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const t = useTranslations('dashboard.settings')
   const [copied, setCopied] = useState(false)
 
   async function copy() {
@@ -27,7 +29,7 @@ function CopyButton({ text }: { text: string }) {
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
-          <span className="text-green-600">Copied</span>
+          <span className="text-green-600">{t('copied')}</span>
         </>
       ) : (
         <>
@@ -35,7 +37,7 @@ function CopyButton({ text }: { text: string }) {
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
           </svg>
-          Copy
+          {t('copy')}
         </>
       )}
     </button>
@@ -43,13 +45,17 @@ function CopyButton({ text }: { text: string }) {
 }
 
 export default function ApiKeySection({ apiKey, siteUrl }: Props) {
+  const t = useTranslations('dashboard.settings')
   const [revealed, setRevealed] = useState(false)
 
   if (!apiKey) {
+    const before = t('apiNoKey', { var: '__VAR__' }).split('__VAR__')
     return (
       <div className="space-y-3">
         <p className="text-sm text-slate-500">
-          No API key configured. Set the <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono">CICD_API_KEY</code> environment variable to enable API access.
+          {before[0]}
+          <code className="text-xs bg-slate-100 px-1.5 py-0.5 rounded font-mono">CICD_API_KEY</code>
+          {before[1]}
         </p>
         <pre className="text-xs font-mono bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-500">
           CICD_API_KEY=your-secret-key
@@ -99,7 +105,7 @@ export default function ApiKeySection({ apiKey, siteUrl }: Props) {
 
       {/* Key display */}
       <div>
-        <p className="text-xs font-medium text-slate-600 mb-2">API key</p>
+        <p className="text-xs font-medium text-slate-600 mb-2">{t('apiKeyLabel')}</p>
         <div className="flex items-center gap-2">
           <code className="flex-1 min-w-0 font-mono text-sm bg-slate-50 border border-slate-200
             rounded-xl px-4 py-2.5 text-slate-800 truncate">
@@ -117,7 +123,7 @@ export default function ApiKeySection({ apiKey, siteUrl }: Props) {
                   <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
                   <line x1="1" y1="1" x2="23" y2="23"/>
                 </svg>
-                Hide
+                {t('hide')}
               </>
             ) : (
               <>
@@ -125,20 +131,20 @@ export default function ApiKeySection({ apiKey, siteUrl }: Props) {
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                   <circle cx="12" cy="12" r="3"/>
                 </svg>
-                Show
+                {t('show')}
               </>
             )}
           </button>
           <CopyButton text={apiKey} />
         </div>
         <p className="text-xs text-slate-400 mt-2">
-          Keep this secret. Treat it like a password — do not commit it to source control.
+          {t('apiKeyHint')}
         </p>
       </div>
 
       {/* Endpoint */}
       <div>
-        <p className="text-xs font-medium text-slate-600 mb-2">Endpoint</p>
+        <p className="text-xs font-medium text-slate-600 mb-2">{t('apiEndpointLabel')}</p>
         <div className="flex items-center gap-2">
           <code className="flex-1 font-mono text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 truncate">
             POST {endpoint}
@@ -150,7 +156,7 @@ export default function ApiKeySection({ apiKey, siteUrl }: Props) {
       {/* Curl example */}
       <div>
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-medium text-slate-600">Example request</p>
+          <p className="text-xs font-medium text-slate-600">{t('apiExampleLabel')}</p>
           <CopyButton text={curlCommand} />
         </div>
         <pre className="text-xs font-mono bg-slate-950 text-emerald-400 rounded-xl px-4 py-4
@@ -161,7 +167,7 @@ export default function ApiKeySection({ apiKey, siteUrl }: Props) {
 
       {/* Response shape */}
       <div>
-        <p className="text-xs font-medium text-slate-600 mb-2">Response shape</p>
+        <p className="text-xs font-medium text-slate-600 mb-2">{t('apiResponseLabel')}</p>
         <pre className="text-xs font-mono bg-slate-50 border border-slate-200 text-slate-600 rounded-xl
           px-4 py-4 overflow-x-auto leading-relaxed whitespace-pre">
           {exampleResponse}

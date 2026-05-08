@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations } from 'next-intl/server'
 import Topbar from '@/components/dashboard/Topbar'
 import InviteForm from './InviteForm'
 import { removeMember } from './actions'
@@ -11,19 +12,19 @@ type Member = {
   created_at: string
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   if (status === 'active') {
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-        Active
+        {label}
       </span>
     )
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-      Pending
+      {label}
     </span>
   )
 }
@@ -42,6 +43,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export default async function TeamPage() {
+  const t = await getTranslations('dashboard.team')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -56,10 +58,10 @@ export default async function TeamPage() {
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar
-        title="Team"
+        title={t('title')}
         subtitle={allMembers.length > 0
-          ? `${allMembers.length} member${allMembers.length !== 1 ? 's' : ''}`
-          : 'Invite colleagues to collaborate on accessibility'}
+          ? t('memberCount', { count: allMembers.length })
+          : t('emptySubtitle')}
       />
 
       <div className="p-7 max-w-3xl space-y-5">
@@ -67,7 +69,7 @@ export default async function TeamPage() {
         {/* Invite card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
-            Invite a team member
+            {t('inviteSection')}
           </p>
           <InviteForm />
         </div>
@@ -84,17 +86,17 @@ export default async function TeamPage() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             </div>
-            <p className="text-sm font-medium text-slate-700 mb-1">No team members yet</p>
-            <p className="text-xs text-slate-400">Invite a colleague above to get started.</p>
+            <p className="text-sm font-medium text-slate-700 mb-1">{t('emptyTitle')}</p>
+            <p className="text-xs text-slate-400">{t('emptySub')}</p>
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100">
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Email</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Role</th>
-                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Status</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{t('tableEmail')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{t('tableRole')}</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{t('tableStatus')}</th>
                   <th className="px-5 py-3" />
                 </tr>
               </thead>
@@ -103,13 +105,13 @@ export default async function TeamPage() {
                   <tr key={member.id} className="hover:bg-slate-50/50 transition">
                     <td className="px-5 py-4 text-slate-700 font-medium">{member.member_email}</td>
                     <td className="px-5 py-4"><RoleBadge role={member.role} /></td>
-                    <td className="px-5 py-4"><StatusBadge status={member.status} /></td>
+                    <td className="px-5 py-4"><StatusBadge status={member.status} label={member.status === 'active' ? t('statusActive') : t('statusPending')} /></td>
                     <td className="px-5 py-4 text-right">
                       <form action={removeMember}>
                         <input type="hidden" name="memberId" value={member.id} />
                         <button
                           type="submit"
-                          title="Remove member"
+                          title={t('removeTooltip')}
                           className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-300
                             hover:text-red-500 hover:bg-red-50 transition"
                         >

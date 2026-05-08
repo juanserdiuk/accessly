@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getTranslations } from 'next-intl/server'
 import Topbar from '@/components/dashboard/Topbar'
 import ProfileForm from './ProfileForm'
 import PasswordForm from './PasswordForm'
@@ -33,6 +34,7 @@ function Section({
 }
 
 export default async function SettingsPage() {
+  const t = await getTranslations('dashboard.settings')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -53,48 +55,27 @@ export default async function SettingsPage() {
 
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
-      <Topbar title="Settings" />
+      <Topbar title={t('title')} />
 
       <div className="p-7 max-w-3xl space-y-4">
 
-        {/* Profile */}
-        <Section
-          title="Profile"
-          description="Your display name shown across the dashboard."
-        >
+        <Section title={t('profileTitle')} description={t('profileDesc')}>
           <ProfileForm firstName={firstName} lastName={lastName} email={email} />
         </Section>
 
-        {/* Password */}
-        <Section
-          title="Password"
-          description="Change the password used to sign in to your account."
-        >
+        <Section title={t('passwordTitle')} description={t('passwordDesc')}>
           <PasswordForm />
         </Section>
 
-        {/* Plan & Billing */}
-        <Section
-          title="Plan & Billing"
-          description="Your current subscription plan and billing options."
-        >
+        <Section title={t('billingTitle')} description={t('billingDesc')}>
           <BillingSection plan={plan} hasCustomer={hasCustomer} />
         </Section>
 
-        {/* Developer API */}
-        <Section
-          title="Developer API"
-          description="Use the REST API to run scans from your CI/CD pipeline or custom tooling."
-        >
+        <Section title={t('apiTitle')} description={t('apiDesc')}>
           <ApiKeySection apiKey={apiKey} siteUrl={siteUrl} />
         </Section>
 
-        {/* Danger Zone */}
-        <Section
-          title="Danger Zone"
-          description="Irreversible actions that permanently affect your account."
-          danger
-        >
+        <Section title={t('dangerTitle')} description={t('dangerDesc')} danger>
           <DangerZone />
         </Section>
 

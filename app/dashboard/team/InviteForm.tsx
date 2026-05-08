@@ -1,9 +1,11 @@
 'use client'
 
 import { useActionState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { inviteMember } from './actions'
 
 export default function InviteForm() {
+  const t = useTranslations('dashboard.team')
   const [state, action, pending] = useActionState(inviteMember, null)
   const emailRef = useRef<HTMLInputElement>(null)
 
@@ -20,7 +22,7 @@ export default function InviteForm() {
           ref={emailRef}
           name="email"
           type="email"
-          placeholder="colleague@company.com"
+          placeholder={t('invitePlaceholder')}
           className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-white
             focus:outline-none focus:border-emerald-400 transition placeholder:text-slate-300"
         />
@@ -29,9 +31,9 @@ export default function InviteForm() {
           className="px-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white
             focus:outline-none focus:border-emerald-400 transition text-slate-700 cursor-pointer"
         >
-          <option value="member">Member</option>
-          <option value="admin">Admin</option>
-          <option value="viewer">Viewer</option>
+          <option value="member">{t('roleMember')}</option>
+          <option value="admin">{t('roleAdmin')}</option>
+          <option value="viewer">{t('roleViewer')}</option>
         </select>
         <button
           type="submit"
@@ -39,14 +41,14 @@ export default function InviteForm() {
           className="px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl
             hover:bg-slate-700 transition disabled:opacity-50 shrink-0"
         >
-          {pending ? 'Inviting…' : 'Invite'}
+          {pending ? t('inviting') : t('invite')}
         </button>
       </div>
       {state?.error && (
         <p className="text-xs text-red-500">{state.error}</p>
       )}
       {state?.success && (
-        <p className="text-xs text-emerald-600">Invitation sent successfully.</p>
+        <p className="text-xs text-emerald-600">{t('inviteSuccess')}</p>
       )}
     </form>
   )
