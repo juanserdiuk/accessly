@@ -182,5 +182,14 @@
     "scanWarnings": "Advertencias",
     "scanPassed": "Aprobados",
     "scanYourSite": "Escanea tu sitio para ver tu informe completo →"
+  },
+  "errors": {
+    "notFoundTitle": "Página no encontrada",
+    "notFoundSub": "La página que buscas no existe o ha sido movida.",
+    "notFoundCta": "Volver al inicio",
+    "errorTitle": "Algo salió mal",
+    "errorSub": "Ocurrió un error inesperado. Hemos sido notificados y estamos investigando.",
+    "errorCta": "Intentar de nuevo",
+    "errorHome": "Volver al inicio"
   }
 }
