@@ -71,12 +71,8 @@ export default function BuiltByExpert() {
             {/* Photo + identity */}
             <div className="flex items-center gap-5">
               {/* Photo placeholder */}
-              <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-emerald-400/30 to-teal-600/30 border border-emerald-400/20 flex items-center justify-center shrink-0 overflow-hidden">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                  <circle cx="12" cy="7" r="4"/>
-                </svg>
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/profile.jpg" alt="Juan Serdiuk" className="w-28 h-28 rounded-full object-cover object-top ring-4 ring-emerald-400" />
               <div>
                 <h3 className="font-serif text-xl text-white font-bold">Juan Serdiuk</h3>
                 <p className="text-sm text-white/50 leading-snug mt-0.5">Senior Accessibility Consultant<br />&amp; Front-End Developer</p>
