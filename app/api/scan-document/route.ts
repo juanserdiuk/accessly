@@ -10,7 +10,7 @@ interface Check {
 }
 
 async function checkPdf(buffer: Buffer): Promise<Check[]> {
-  const { PDFParse } = await import('pdf-parse')
+  const { PDFParse, PasswordException } = await import('pdf-parse')
 
   const parser = new PDFParse({ data: new Uint8Array(buffer) })
 
@@ -18,20 +18,39 @@ async function checkPdf(buffer: Buffer): Promise<Check[]> {
   let text = ''
   let numpages = 1
   let hasOutline = false
+  let pageLinks: Array<{ text: string; url: string }> = []
 
   try {
     const [infoResult, textResult] = await Promise.all([
-      parser.getInfo(),
+      parser.getInfo({ parsePageInfo: true }),
       parser.getText(),
     ])
     info = (infoResult.info ?? {}) as Record<string, string>
     text = (textResult.text ?? '').trim()
     numpages = infoResult.total ?? 1
     hasOutline = Array.isArray(infoResult.outline) && infoResult.outline.length > 0
-  } catch {
-    throw new Error("We couldn't read this document. Try a different PDF or make sure it's not password-protected.")
+    pageLinks = (infoResult.pages ?? []).flatMap((p: { links?: Array<{ text: string; url: string }> }) => p.links ?? [])
+  } catch (err) {
+    if (err instanceof PasswordException) {
+      throw new Error('This PDF is password-protected. Remove the password protection and re-upload to check accessibility.')
+    }
+    throw new Error("We couldn't read this document. Make sure it's a valid, non-corrupted PDF.")
+  } finally {
+    await parser.destroy().catch(() => {})
   }
 
+  // Heading heuristic: a document with structure will have some short lines
+  // (headings, section titles) mixed among longer paragraph lines.
+  const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
+  const shortLines = nonEmptyLines.filter(l => l.length <= 60)
+  const hasLikelyHeadings = nonEmptyLines.length < 5 || shortLines.length >= 2
+
+  // Descriptive link text check
+  const poorTexts = new Set(['here', 'click here', 'read more', 'more', 'link', 'this', 'learn more'])
+  const poorLinks = pageLinks.filter(l => {
+    const t = l.text.trim().toLowerCase()
+    return t === '' || poorTexts.has(t) || /^https?:\/\//i.test(l.text.trim())
+  })
 
   return [
     {
@@ -42,27 +61,29 @@ async function checkPdf(buffer: Buffer): Promise<Check[]> {
       wcag: 'WCAG 2.4.2',
       description: info.Title?.trim()
         ? `Title is set to "${info.Title.trim()}".`
-        : 'No title found in document properties. Screen reader users need a descriptive title to identify the document.',
+        : 'No title found in document properties. Set a descriptive title in File → Properties so screen readers can identify the document.',
     },
     {
       id: 'text-extractable',
-      name: 'Text is extractable',
+      name: 'Text extractable',
       passed: text.length > 0,
       impact: 'critical',
       wcag: 'WCAG 1.1.1',
       description: text.length > 0
         ? 'Text content can be extracted and read by assistive technology.'
-        : 'No readable text found. This appears to be a scanned image — apply OCR to make it accessible.',
+        : 'No readable text found. This appears to be a scanned image — apply OCR to make the content accessible.',
     },
     {
-      id: 'tagged-content',
-      name: 'Tagged content',
-      passed: text.length > 0,
+      id: 'heading-structure',
+      name: 'Heading structure',
+      passed: text.length === 0 || hasLikelyHeadings,
       impact: 'serious',
       wcag: 'WCAG 1.3.1',
-      description: text.length > 0
-        ? 'Document content appears to be tagged for assistive technology.'
-        : 'Tagged structure could not be detected. Tagged PDFs allow screen readers to navigate content correctly.',
+      description: text.length === 0
+        ? 'No text content found to evaluate heading structure.'
+        : hasLikelyHeadings
+        ? 'Document text shows structural variation consistent with headings and sections.'
+        : 'Document text appears to be one large block with no structural breaks. Apply heading styles before exporting to PDF.',
     },
     {
       id: 'language',
@@ -72,20 +93,31 @@ async function checkPdf(buffer: Buffer): Promise<Check[]> {
       wcag: 'WCAG 3.1.1',
       description: info.Language?.trim()
         ? `Document language is set to "${info.Language.trim()}".`
-        : 'No language is specified in the document properties. Screen readers cannot apply the correct pronunciation rules.',
+        : 'No language is specified in document properties. Screen readers need the language to apply correct pronunciation rules.',
     },
     {
-      id: 'reading-order',
+      id: 'navigation-structure',
       name: 'Navigation structure',
       passed: numpages <= 3 || hasOutline,
       impact: 'moderate',
       wcag: 'WCAG 2.4.5',
-      description:
-        hasOutline
-          ? 'Document includes bookmarks for accessible navigation.'
-          : numpages <= 3
-          ? 'Document is concise; navigation structure is appropriate for its length.'
-          : `This ${numpages}-page document should include bookmarks and a table of contents for accessible navigation.`,
+      description: hasOutline
+        ? 'Document includes bookmarks for accessible navigation.'
+        : numpages <= 3
+        ? 'Document is concise; a full navigation structure is appropriate for its length.'
+        : `This ${numpages}-page document should include bookmarks and a table of contents for accessible navigation.`,
+    },
+    {
+      id: 'link-text',
+      name: 'Descriptive link text',
+      passed: pageLinks.length === 0 || poorLinks.length === 0,
+      impact: 'minor',
+      wcag: 'WCAG 2.4.4',
+      description: pageLinks.length === 0
+        ? 'No hyperlinks found in the document.'
+        : poorLinks.length === 0
+        ? `All ${pageLinks.length} link(s) have descriptive text.`
+        : `${poorLinks.length} of ${pageLinks.length} link(s) use generic text like "click here" or bare URLs. Use descriptive link text that explains the destination.`,
     },
   ]
 }

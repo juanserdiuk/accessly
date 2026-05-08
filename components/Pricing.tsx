@@ -24,8 +24,8 @@ const plans = [
   },
   {
     name: 'Agency', slug: 'agency', monthly: 99, annual: 79,
-    desc: 'For agencies managing accessibility at scale.',
-    features: ['Everything in Pro','Unlimited sites','API access','CI/CD integration','Unlimited team members','White-label reports'],
+    desc: 'For agencies and accessibility professionals managing multiple client portfolios at scale.',
+    features: ['Everything in Pro','Unlimited sites','Multiple portfolios','API access','CI/CD integration','Unlimited team members','White-label reports'],
     cta: 'Get Agency plan', href: null, featured: false,
   },
 ]

@@ -125,12 +125,13 @@ export default async function ScanReportPage({
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Score</p>
-            <div className="relative w-36 h-36">
+            <div className="relative w-40 h-40 overflow-visible">
               <svg
                 className="-rotate-90"
-                width="144"
-                height="144"
-                viewBox="-8 -8 160 160"
+                width="160"
+                height="160"
+                viewBox="-16 -16 176 176"
+                overflow="visible"
                 style={{ overflow: 'visible' }}
               >
                 <circle cx="72" cy="72" r="54" fill="none" stroke="#f1f5f9" strokeWidth="12" />

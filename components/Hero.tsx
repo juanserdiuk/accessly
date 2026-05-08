@@ -27,7 +27,7 @@ export default function Hero() {
           </Link>
         </div>
         <div className="flex justify-center divide-x divide-white/10 bg-white/5 border border-white/10 rounded-2xl max-w-lg mx-auto overflow-hidden">
-          {[['2.4M+','Scans run'],['50K+','Sites monitored'],['98%','Accuracy rate']].map(([num, label]) => (
+          {[['10K+','Issues detected'],['500+','Sites scanned'],['98%','Accuracy rate']].map(([num, label]) => (
             <div key={label} className="flex-1 py-5 text-center">
               <div className="font-serif text-2xl text-white">{num}</div>
               <div className="text-xs text-white/40 mt-1">{label}</div>

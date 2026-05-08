@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Scanner from '@/components/Scanner'
+import GuestScanner from './GuestScanner'
 import DocScanner from '@/components/DocScanner'
 
 type Props = { params: Promise<{ token: string }> }
@@ -99,23 +99,25 @@ export default async function GuestPage({ params }: Props) {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 py-12 px-6">
-        <div className="max-w-3xl mx-auto space-y-8">
+      <div className="flex-1 py-10 px-6">
+        <div className="max-w-4xl mx-auto">
 
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-3">
               Guest access · {gt.label}
             </p>
-            <h1 className="font-serif text-3xl text-slate-900 mb-3">
+            <h1 className="font-serif text-3xl text-slate-900 mb-2">
               Check your site&apos;s accessibility
             </h1>
-            <p className="text-slate-500 max-w-xl mx-auto">
-              Scan any URL for WCAG violations or upload a document — no limits, no sign-up required.
+            <p className="text-slate-500">
+              Full WCAG 2.1 scanner — no limits, no sign-up required.
             </p>
           </div>
 
-          <Scanner unlimited />
-          <DocScanner />
+          <div className="space-y-10">
+            <GuestScanner />
+            <DocScanner />
+          </div>
 
         </div>
       </div>
