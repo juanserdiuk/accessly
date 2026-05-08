@@ -208,6 +208,46 @@
     "fullAuditCta": "¿Quieres una auditoría completa?",
     "createAccount": "Crea una cuenta gratis →"
   },
+  "dashboard": {
+    "common": {
+      "signOut": "Cerrar sesión",
+      "planSuffix": "plan",
+      "export": "Exportar",
+      "addSite": "+ Añadir sitio",
+      "downloadPdf": "Descargar PDF",
+      "shareReport": "Compartir informe",
+      "linkCopied": "¡Enlace copiado!",
+      "scanning": "Escaneando…",
+      "scanNow": "Escanear ahora",
+      "scanPlaceholder": "https://ejemplo.com",
+      "scanFailed": "Error en el análisis"
+    },
+    "nav": {
+      "dashboard": "Panel",
+      "scans": "Análisis",
+      "reports": "Informes",
+      "monitor": "Monitor",
+      "team": "Equipo",
+      "settings": "Ajustes"
+    },
+    "time": {
+      "minutesAgo": "hace {count}m",
+      "hoursAgo": "hace {count}h",
+      "daysAgo": "hace {count}d",
+      "yesterday": "Ayer",
+      "justNow": "ahora mismo"
+    },
+    "violations": {
+      "element": "Elemento",
+      "selector": "Selector",
+      "howToFix": "Cómo solucionarlo",
+      "elementSingular": "elemento",
+      "elementPlural": "elementos",
+      "docs": "Documentos →",
+      "learnMore": "Más información →",
+      "rerunHint": "Vuelve a ejecutar este análisis para ver la información detallada de los nodos."
+    }
+  },
   "auth": {
     "trustedBy": "confían en Accessly para el cumplimiento WCAG.",
     "trustedByPrefix": "Más de 50.000 equipos",

@@ -1,4 +1,6 @@
+'use client'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 interface Props {
   title: string
@@ -6,6 +8,7 @@ interface Props {
 }
 
 export default function Topbar({ title, subtitle }: Props) {
+  const t = useTranslations('dashboard.common')
   return (
     <div className="h-15 bg-white border-b border-slate-200 px-7 flex items-center justify-between shrink-0 print:hidden">
       <div>
@@ -18,11 +21,11 @@ export default function Topbar({ title, subtitle }: Props) {
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
         </button>
         <button className="flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition">
-          ↓ Export
+          ↓ {t('export')}
         </button>
         <Link href="/dashboard/scans/new"
           className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition">
-          + Add site
+          {t('addSite')}
         </Link>
       </div>
     </div>

@@ -208,6 +208,46 @@
     "fullAuditCta": "Want a full audit?",
     "createAccount": "Create a free account →"
   },
+  "dashboard": {
+    "common": {
+      "signOut": "Sign out",
+      "planSuffix": "plan",
+      "export": "Export",
+      "addSite": "+ Add site",
+      "downloadPdf": "Download PDF",
+      "shareReport": "Share report",
+      "linkCopied": "Link copied!",
+      "scanning": "Scanning…",
+      "scanNow": "Scan now",
+      "scanPlaceholder": "https://example.com",
+      "scanFailed": "Scan failed"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "scans": "Scans",
+      "reports": "Reports",
+      "monitor": "Monitor",
+      "team": "Team",
+      "settings": "Settings"
+    },
+    "time": {
+      "minutesAgo": "{count}m ago",
+      "hoursAgo": "{count}h ago",
+      "daysAgo": "{count}d ago",
+      "yesterday": "Yesterday",
+      "justNow": "just now"
+    },
+    "violations": {
+      "element": "Element",
+      "selector": "Selector",
+      "howToFix": "How to fix",
+      "elementSingular": "element",
+      "elementPlural": "elements",
+      "docs": "Docs →",
+      "learnMore": "Learn more →",
+      "rerunHint": "Re-run this scan to see detailed node information."
+    }
+  },
   "auth": {
     "trustedBy": "trust Accessly for WCAG compliance.",
     "trustedByPrefix": "50,000+ teams",

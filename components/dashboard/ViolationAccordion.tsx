@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 type NodeDetail = {
   html: string
@@ -26,11 +27,12 @@ const impactBadge: Record<string, string> = {
 }
 
 function NodeBlock({ node, index }: { node: NodeDetail; index: number }) {
+  const t = useTranslations('dashboard.violations')
   return (
     <div className="px-5 py-4 space-y-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-          Element {index + 1}
+          {t('element')} {index + 1}
         </span>
         {node.impact && (
           <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${impactBadge[node.impact] ?? 'bg-slate-100 text-slate-500'}`}>
@@ -52,7 +54,7 @@ function NodeBlock({ node, index }: { node: NodeDetail; index: number }) {
               <circle cx="12" cy="12" r="3"/>
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
             </svg>
-            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Selector</span>
+            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">{t('selector')}</span>
           </div>
           <code className="text-xs font-mono text-slate-600 bg-slate-50 border border-slate-100 px-2.5 py-1.5 rounded-lg break-all leading-relaxed">
             {node.target}
@@ -67,7 +69,7 @@ function NodeBlock({ node, index }: { node: NodeDetail; index: number }) {
             <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
           </svg>
           <div>
-            <p className="text-xs font-semibold text-amber-800 mb-0.5">How to fix</p>
+            <p className="text-xs font-semibold text-amber-800 mb-0.5">{t('howToFix')}</p>
             <p className="text-xs text-amber-700 leading-relaxed">{node.failureSummary}</p>
           </div>
         </div>
@@ -77,6 +79,7 @@ function NodeBlock({ node, index }: { node: NodeDetail; index: number }) {
 }
 
 function ViolationCard({ v }: { v: ViolationItem }) {
+  const t = useTranslations('dashboard.violations')
   const [open, setOpen] = useState(false)
   const badge = impactBadge[v.impact] ?? 'bg-slate-100 text-slate-500'
   const wcagTags = v.wcag ? v.wcag.split(', ').filter(Boolean) : []
@@ -102,7 +105,9 @@ function ViolationCard({ v }: { v: ViolationItem }) {
             <span className="text-xs font-mono text-slate-400 hidden md:block">{wcagTags[0]}</span>
           )}
           <span className="text-xs text-slate-400 whitespace-nowrap">
-            {Array.isArray(v.nodes) ? `${v.nodes.length} ${v.nodes.length === 1 ? 'element' : 'elements'}` : `${v.nodes} elements`}
+            {Array.isArray(v.nodes)
+              ? `${v.nodes.length} ${v.nodes.length === 1 ? t('elementSingular') : t('elementPlural')}`
+              : `${v.nodes} ${t('elementPlural')}`}
           </span>
           <a
             href={v.helpUrl}
@@ -111,7 +116,7 @@ function ViolationCard({ v }: { v: ViolationItem }) {
             onClick={e => e.stopPropagation()}
             className="text-xs font-semibold text-emerald-600 hover:underline whitespace-nowrap hidden sm:block"
           >
-            Docs →
+            {t('docs')}
           </a>
           <svg
             width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
@@ -140,7 +145,7 @@ function ViolationCard({ v }: { v: ViolationItem }) {
                 rel="noopener noreferrer"
                 className="ml-auto text-xs font-semibold text-emerald-600 hover:underline sm:hidden"
               >
-                Learn more →
+                {t('learnMore')}
               </a>
             </div>
           )}
@@ -151,7 +156,7 @@ function ViolationCard({ v }: { v: ViolationItem }) {
               <NodeBlock key={i} node={node} index={i} />
             )) : (
               <div className="px-5 py-4 text-xs text-slate-400 italic">
-                Re-run this scan to see detailed node information.
+                {t('rerunHint')}
               </div>
             )}
           </div>

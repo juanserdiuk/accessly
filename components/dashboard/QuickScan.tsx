@@ -1,8 +1,10 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 export default function QuickScan() {
+  const t = useTranslations('dashboard.common')
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -21,7 +23,7 @@ export default function QuickScan() {
         body: JSON.stringify({ url: normalized }),
       })
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Scan failed')
+      if (!res.ok) throw new Error(data.error ?? t('scanFailed'))
       setUrl('')
       router.refresh()
     } catch (err: any) {
@@ -39,7 +41,7 @@ export default function QuickScan() {
           value={url}
           onChange={e => setUrl(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleScan()}
-          placeholder="https://example.com"
+          placeholder={t('scanPlaceholder')}
           disabled={loading}
           className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition disabled:opacity-50"
         />
@@ -51,9 +53,9 @@ export default function QuickScan() {
           {loading ? (
             <>
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Scanning…
+              {t('scanning')}
             </>
-          ) : 'Scan now'}
+          ) : t('scanNow')}
         </button>
       </div>
       {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
