@@ -26,6 +26,13 @@ export type ScanResult = {
   score: number
 }
 
+// chromium-min does not bundle the binary. On production we download the
+// pack from a remote URL (GitHub releases or a custom CDN set via env var)
+// and cache it in /tmp. Subsequent warm invocations skip the download.
+const CHROMIUM_PACK_URL =
+  process.env.CHROMIUM_REMOTE_EXEC_PATH ??
+  'https://github.com/Sparticuz/chromium/releases/download/v148.0.0/chromium-v148.0.0-pack.tar'
+
 async function getBrowser() {
   if (process.env.NODE_ENV === 'development') {
     const { executablePath } = await import('puppeteer')
@@ -35,8 +42,11 @@ async function getBrowser() {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     })
   }
+
+  chromium.setGraphicsMode = false
+
   return puppeteer.launch({
-    executablePath: await chromium.executablePath(),
+    executablePath: await chromium.executablePath(CHROMIUM_PACK_URL),
     headless: true,
     args: chromium.args,
   })

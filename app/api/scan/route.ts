@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { runScan } from '@/lib/runScan'
 import { createClient } from '@/lib/supabase/server'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   const { url } = await req.json()
