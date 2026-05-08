@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -32,8 +33,8 @@ function hostname(url: string) {
   try { return new URL(url).hostname } catch { return url }
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDate(iso: string, locale: string) {
+  return new Date(iso).toLocaleDateString(locale, {
     month: 'long', day: 'numeric', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
@@ -56,6 +57,8 @@ export default async function PublicScanReportPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const t = await getTranslations('scanReport')
+  const locale = await getLocale()
   const { id } = await params
   const supabase = createAdminClient()
 
@@ -89,7 +92,7 @@ export default async function PublicScanReportPage({
             href="/signup"
             className="text-sm font-semibold bg-slate-900 text-white px-4 py-1.5 rounded-lg hover:bg-slate-700 transition"
           >
-            Sign up free
+            {t('publicHeader')}
           </Link>
         </div>
       </header>
@@ -99,7 +102,7 @@ export default async function PublicScanReportPage({
         <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">Accessibility Report</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">{t('reportLabel')}</p>
               <a
                 href={scan.url}
                 target="_blank"
@@ -109,14 +112,14 @@ export default async function PublicScanReportPage({
                 {scan.url}
               </a>
             </div>
-            <span className="text-xs text-slate-400 whitespace-nowrap pt-1">{formatDate(scan.created_at)}</span>
+            <span className="text-xs text-slate-400 whitespace-nowrap pt-1">{formatDate(scan.created_at, locale)}</span>
           </div>
         </div>
 
         {/* Score gauge + metrics */}
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Score</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">{t('score')}</p>
             <div className="relative w-36 h-36">
               <svg className="-rotate-90" width="144" height="144" viewBox="0 0 144 144">
                 <circle cx="72" cy="72" r="56" fill="none" stroke="#f1f5f9" strokeWidth="12" />
@@ -134,7 +137,7 @@ export default async function PublicScanReportPage({
 
           {([
             {
-              label: 'Errors', value: scan.errors,
+              label: t('errors'), value: scan.errors,
               bg: 'bg-red-50', text: 'text-red-600', ring: 'ring-red-100',
               icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500">
@@ -143,7 +146,7 @@ export default async function PublicScanReportPage({
               ),
             },
             {
-              label: 'Warnings', value: scan.warnings,
+              label: t('warnings'), value: scan.warnings,
               bg: 'bg-amber-50', text: 'text-amber-500', ring: 'ring-amber-100',
               icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-500">
@@ -153,7 +156,7 @@ export default async function PublicScanReportPage({
               ),
             },
             {
-              label: 'Passes', value: scan.passes,
+              label: t('passes'), value: scan.passes,
               bg: 'bg-green-50', text: 'text-green-600', ring: 'ring-green-100',
               icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500">
@@ -177,11 +180,11 @@ export default async function PublicScanReportPage({
         {/* Violations table */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100">
-            <div className="font-semibold text-slate-900">Violations</div>
+            <div className="font-semibold text-slate-900">{t('violations')}</div>
             <div className="text-xs text-slate-400 mt-0.5">
               {violations.length === 0
-                ? 'No violations detected'
-                : `${violations.length} issue${violations.length !== 1 ? 's' : ''} detected, sorted by severity`}
+                ? t('noViolations')
+                : t('issuesDetected', { count: violations.length })}
             </div>
           </div>
 
@@ -192,17 +195,17 @@ export default async function PublicScanReportPage({
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <p className="text-slate-600 text-sm font-medium">No violations detected</p>
-              <p className="text-slate-400 text-xs mt-1">This page passed all checked accessibility rules.</p>
+              <p className="text-slate-600 text-sm font-medium">{t('noViolations')}</p>
+              <p className="text-slate-400 text-xs mt-1">{t('noViolationsSub')}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">Impact</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Issue</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">Elements</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-40">WCAG</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">{t('tableImpact')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableIssue')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-28">{t('tableElements')}</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide w-40">{t('tableWcag')}</th>
                   <th className="px-4 py-3 w-28" />
                 </tr>
               </thead>
@@ -219,7 +222,7 @@ export default async function PublicScanReportPage({
                       <div className="text-xs text-slate-400 leading-relaxed max-w-md">{v.description}</div>
                     </td>
                     <td className="px-4 py-4 text-sm text-slate-600 whitespace-nowrap">
-                      {v.nodes.length} {v.nodes.length === 1 ? 'element' : 'elements'}
+                      {t('elementCount', { count: v.nodes.length })}
                     </td>
                     <td className="px-4 py-4">
                       <span className="text-xs text-slate-500 font-mono">{v.wcag || '—'}</span>
@@ -231,7 +234,7 @@ export default async function PublicScanReportPage({
                         rel="noopener noreferrer"
                         className="text-xs font-semibold text-emerald-600 hover:underline whitespace-nowrap"
                       >
-                        Learn more →
+                        {t('learnMore')}
                       </a>
                     </td>
                   </tr>
@@ -244,9 +247,9 @@ export default async function PublicScanReportPage({
         {/* Footer CTA */}
         <div className="text-center py-4">
           <p className="text-xs text-slate-400">
-            Generated by{' '}
+            {t('footerPrefix')}{' '}
             <Link href="/" className="text-emerald-600 font-semibold hover:underline">Accessly</Link>
-            {' '}— WCAG accessibility scanner
+            {' '}{t('footerSuffix')}
           </p>
         </div>
       </main>
