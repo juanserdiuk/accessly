@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly-eight.vercel.app'
+function getOrigin(req: NextRequest) {
+  const origin = req.headers.get('origin') ?? req.nextUrl.origin
+  if (origin) return origin.replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+}
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -21,7 +25,7 @@ export async function POST() {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: profile.stripe_customer_id,
-    return_url: `${SITE_URL}/dashboard/settings`,
+    return_url: `${getOrigin(req)}/dashboard/settings`,
   })
 
   return NextResponse.json({ url: session.url })
