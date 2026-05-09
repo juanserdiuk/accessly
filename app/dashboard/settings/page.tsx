@@ -51,7 +51,7 @@ export default async function SettingsPage() {
   const plan        = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
   const hasCustomer = !!profile?.stripe_customer_id
   const apiKey      = process.env.CICD_API_KEY ?? null
-  const siteUrl     = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '')
+  const siteUrl     = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
 
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">

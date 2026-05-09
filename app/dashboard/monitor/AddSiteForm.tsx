@@ -20,7 +20,9 @@ export default function AddSiteForm() {
   return (
     <form action={action} className="space-y-3">
       <div className="flex gap-3">
+        <label htmlFor="add-site-url" className="sr-only">{t('addSection')}</label>
         <input
+          id="add-site-url"
           ref={inputRef}
           name="url"
           type="url"

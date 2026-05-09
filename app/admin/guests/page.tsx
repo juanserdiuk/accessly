@@ -61,8 +61,8 @@ export default async function GuestsPage() {
   const allTokens: GuestToken[] = tokens ?? []
   const activeCount = allTokens.filter(t => t.is_active && new Date(t.expires_at) > new Date()).length
 
-  // Build guest URL base — rely on env var or fallback
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  // Build guest URL base — rely on env var or fallback to prod domain
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-6">

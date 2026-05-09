@@ -27,12 +27,13 @@ export async function POST(req: NextRequest) {
   let hostname = url
   try { hostname = new URL(url).hostname } catch { /* use raw url */ }
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.io'
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
   const scanLink = `${siteUrl}/?url=${encodeURIComponent(url)}`
+  const fromAddress = process.env.EMAIL_FROM ?? 'Accessly <onboarding@resend.dev>'
 
   try {
     await resend.emails.send({
-      from: 'Accessly <onboarding@resend.dev>',
+      from: fromAddress,
       to: email,
       subject: `Your accessibility scan for ${hostname}`,
       html: `

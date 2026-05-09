@@ -126,9 +126,16 @@ export async function POST(req: NextRequest) {
 </body>
 </html>`
 
+  const fromAddress = process.env.EMAIL_FROM ?? 'Accessly <onboarding@resend.dev>'
+  const toAddress   = process.env.ADMIN_EMAIL?.trim()
+  if (!toAddress) {
+    console.error('[contact] ADMIN_EMAIL not set — cannot deliver inquiry')
+    return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
+  }
+
   const { error } = await resend.emails.send({
-    from: 'onboarding@resend.dev',
-    to: 'juanserdiuk@juanserdiuk.com',
+    from: fromAddress,
+    to: toAddress,
     replyTo: email,
     subject: `New Accessly Inquiry: ${name}`,
     html,

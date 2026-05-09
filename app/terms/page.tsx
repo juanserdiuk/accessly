@@ -2,7 +2,7 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 
 const EFFECTIVE = 'May 7, 2026'
-const CONTACT   = 'juanserdiuk@juanserdiuk.com'
+const CONTACT   = process.env.ADMIN_EMAIL ?? 'hello@accessly.us'
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (

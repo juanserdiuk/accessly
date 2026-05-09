@@ -1,6 +1,7 @@
 import { Resend } from 'resend'
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly-eight.vercel.app').replace(/\/$/, '')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+const EMAIL_FROM = process.env.EMAIL_FROM ?? 'Accessly <onboarding@resend.dev>'
 
 function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -24,7 +25,7 @@ export async function sendWelcomeEmail(to: string, firstName: string): Promise<v
 
   const resend = new Resend(process.env.RESEND_API_KEY)
   const { error } = await resend.emails.send({
-    from: 'Accessly <onboarding@resend.dev>',
+    from: EMAIL_FROM,
     to,
     subject,
     html: buildHtml(heading, dashboardUrl),
