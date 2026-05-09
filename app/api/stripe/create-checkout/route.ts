@@ -10,14 +10,17 @@ function getOrigin(req: NextRequest) {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
 }
 
+// Annual total = monthly × 12 × 0.8 (20% off the year), charged once a year.
+// Pro:    2900 × 12 × 0.8 = 27840 ($278.40/year)
+// Agency: 9900 × 12 × 0.8 = 95040 ($950.40/year)
 const SUBSCRIPTION_PLANS = {
   pro: {
-    monthly: { unit_amount: 2900, nickname: 'Pro Monthly' },
-    annual:  { unit_amount: 2300, nickname: 'Pro Annual' },
+    monthly: { unit_amount: 2900,  nickname: 'Pro Monthly' },
+    annual:  { unit_amount: 27840, nickname: 'Pro Annual' },
   },
   agency: {
-    monthly: { unit_amount: 9900, nickname: 'Agency Monthly' },
-    annual:  { unit_amount: 7900, nickname: 'Agency Annual' },
+    monthly: { unit_amount: 9900,  nickname: 'Agency Monthly' },
+    annual:  { unit_amount: 95040, nickname: 'Agency Annual' },
   },
 }
 

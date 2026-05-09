@@ -64,7 +64,7 @@ export default async function TeamPage() {
           : t('emptySubtitle')}
       />
 
-      <div className="p-7 max-w-3xl space-y-5">
+      <div className="p-4 sm:p-7 max-w-3xl space-y-5">
 
         {/* Invite card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
@@ -91,7 +91,8 @@ export default async function TeamPage() {
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[560px]">
               <thead>
                 <tr className="border-b border-slate-100">
                   <th className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{t('tableEmail')}</th>
@@ -127,6 +128,7 @@ export default async function TeamPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 

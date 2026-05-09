@@ -54,7 +54,7 @@ export default async function ScansPage({
         subtitle={total === 0 ? t('noScansYet') : t('totalCount', { count: total })}
       />
 
-      <div className="p-7">
+      <div className="p-4 sm:p-7">
         {total === 0 ? (
           <div className="bg-white border border-slate-200 rounded-2xl flex flex-col items-center justify-center py-20 text-center">
             <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center mb-4">
@@ -69,7 +69,8 @@ export default async function ScansPage({
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
                   <th className="text-left px-5 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">{t('tableUrl')}</th>
@@ -115,6 +116,7 @@ export default async function ScansPage({
                 ))}
               </tbody>
             </table>
+            </div>
 
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50">

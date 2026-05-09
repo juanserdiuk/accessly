@@ -168,7 +168,7 @@ export default async function MonitorPage() {
           : t('subtitleEmpty')}
       />
 
-      <div className="p-7 max-w-4xl space-y-5">
+      <div className="p-4 sm:p-7 max-w-4xl space-y-5">
 
         {/* Add site card */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5">

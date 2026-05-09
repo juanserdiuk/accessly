@@ -80,7 +80,7 @@ export default async function ScanReportPage({
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar title={t('title')} subtitle={hostname(scan.url)} />
 
-      <div className="p-7 space-y-5 max-w-5xl print:max-w-none print:p-0">
+      <div className="p-4 sm:p-7 space-y-5 max-w-5xl print:max-w-none print:p-0">
 
         {/* Print-only header — hidden on screen */}
         <div className="hidden print:flex items-center justify-between border-b border-slate-200 pb-5 mb-2">
@@ -125,7 +125,7 @@ export default async function ScanReportPage({
         </div>
 
         {/* Score gauge + 3 metric cards */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">{t('score')}</p>
             <div className="relative w-40 h-40 overflow-visible">

@@ -16,9 +16,11 @@ const NAV_ITEMS = [
 interface Props {
   email: string
   plan: string
+  /** Whether the drawer is open on mobile. Ignored at lg: and above. */
+  open?: boolean
 }
 
-export default function Sidebar({ email, plan }: Props) {
+export default function Sidebar({ email, plan, open = false }: Props) {
   const tNav = useTranslations('dashboard.nav')
   const tCommon = useTranslations('dashboard.common')
   const path = usePathname()
@@ -32,7 +34,14 @@ export default function Sidebar({ email, plan }: Props) {
   }
 
   return (
-    <aside className="w-56 shrink-0 bg-slate-900 flex flex-col overflow-hidden print:hidden">
+    <aside
+      className={`
+        fixed lg:static inset-y-0 left-0 z-50 w-64 lg:w-56 shrink-0 bg-slate-900
+        flex flex-col overflow-hidden print:hidden
+        transition-transform duration-300 lg:translate-x-0
+        ${open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}
+    >
       <Link href="/" className="flex items-center gap-2 px-5 py-5 border-b border-white/5">
         <div className="w-8 h-8 bg-emerald-400 rounded-lg flex items-center justify-center shrink-0">
           <span className="text-slate-900 text-sm font-bold">A</span>

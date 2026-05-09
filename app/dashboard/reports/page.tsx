@@ -155,7 +155,7 @@ export default async function ReportsPage() {
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar title={t('title')} subtitle={t('subtitle')} />
 
-      <div className="p-7 max-w-5xl space-y-5">
+      <div className="p-4 sm:p-7 max-w-5xl space-y-5">
 
         {/* Summary bar */}
         {domains.length > 0 && (
@@ -209,6 +209,8 @@ export default async function ReportsPage() {
           </div>
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto">
+            <div className="min-w-[700px]">
             {/* Header row */}
             <div className="grid grid-cols-[1fr_80px_96px_64px_120px_80px] gap-4 px-5 py-3 border-b border-slate-100 bg-slate-50">
               {[
@@ -276,6 +278,8 @@ export default async function ReportsPage() {
                   </div>
                 )
               })}
+            </div>
+            </div>
             </div>
           </div>
         )}

@@ -117,7 +117,7 @@ export default async function PublicScanReportPage({
         </div>
 
         {/* Score gauge + metrics */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">{t('score')}</p>
             <div className="relative w-36 h-36">

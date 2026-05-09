@@ -57,7 +57,7 @@ export default async function SettingsPage() {
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar title={t('title')} />
 
-      <div className="p-7 max-w-3xl space-y-4">
+      <div className="p-4 sm:p-7 max-w-3xl space-y-4">
 
         <Section title={t('profileTitle')} description={t('profileDesc')}>
           <ProfileForm firstName={firstName} lastName={lastName} email={email} />

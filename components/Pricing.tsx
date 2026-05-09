@@ -25,21 +25,24 @@ export default function Pricing() {
     { name: t('packAgencyName'), slug: 'agency-pack',  pages: 100, price: 49, perPage: '0.49' },
   ]
 
+  // Annual total = monthly × 12 × 0.8 (20% discount applied to the full year)
+  const annualTotal = (monthly: number) => Math.round(monthly * 12 * 0.8 * 100) / 100
+
   const plans = [
     {
-      name: t('planFreeName'), slug: null, monthly: 0, annual: 0,
+      name: t('planFreeName'), slug: null, monthly: 0,
       desc: t('planFreeDesc'),
       features: [t('planFreeFeature1'), t('planFreeFeature2'), t('planFreeFeature3'), t('planFreeFeature4')],
       cta: t('planFreeCta'), href: '/signup?plan=free', featured: false,
     },
     {
-      name: t('planProName'), slug: 'pro', monthly: 29, annual: 23,
+      name: t('planProName'), slug: 'pro', monthly: 29,
       desc: t('planProDesc'),
       features: [t('planProFeature1'), t('planProFeature2'), t('planProFeature3'), t('planProFeature4'), t('planProFeature5'), t('planProFeature6')],
       cta: t('planProCta'), href: null, featured: true,
     },
     {
-      name: t('planAgencyName'), slug: 'agency', monthly: 99, annual: 79,
+      name: t('planAgencyName'), slug: 'agency', monthly: 99,
       desc: t('planAgencyDesc'),
       features: [t('planAgencyFeature1'), t('planAgencyFeature2'), t('planAgencyFeature3'), t('planAgencyFeature4'), t('planAgencyFeature5'), t('planAgencyFeature6'), t('planAgencyFeature7')],
       cta: t('planAgencyCta'), href: null, featured: false,
@@ -133,9 +136,11 @@ export default function Pricing() {
                 <div className={`text-xs font-semibold uppercase tracking-widest mb-3 ${plan.featured ? 'text-white/50' : 'text-slate-400'}`}>{plan.name}</div>
                 <div className="mb-2">
                   <span className={`font-serif text-5xl ${plan.featured ? 'text-white' : 'text-slate-900'}`}>
-                    ${annual ? plan.annual : plan.monthly}
+                    ${annual ? annualTotal(plan.monthly) : plan.monthly}
                   </span>
-                  <span className={`text-sm ${plan.featured ? 'text-white/40' : 'text-slate-400'}`}>{t('perMonth')}</span>
+                  <span className={`text-sm ${plan.featured ? 'text-white/40' : 'text-slate-400'}`}>
+                    {annual ? t('perYear') : t('perMonth')}
+                  </span>
                 </div>
                 <p className={`text-sm mb-6 leading-relaxed ${plan.featured ? 'text-white/60' : 'text-slate-500'}`}>{plan.desc}</p>
                 <ul className="space-y-2.5 mb-7">
