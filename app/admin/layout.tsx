@@ -11,9 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL)?.trim().toLowerCase()
   const userEmail = user.email?.trim().toLowerCase()
-  if (!adminEmail) redirect('/dashboard?admin=missing-env')
-  if (!userEmail) redirect('/dashboard?admin=no-user-email')
-  if (adminEmail !== userEmail) redirect('/dashboard?admin=mismatch')
+  if (!adminEmail || !userEmail || adminEmail !== userEmail) redirect('/dashboard')
 
   return (
     <div className="min-h-screen bg-slate-50">
