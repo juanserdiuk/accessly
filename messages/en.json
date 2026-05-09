@@ -517,9 +517,28 @@
       "passwordPlaceholder": "••••••••",
       "passwordRequired": "Password is required.",
       "forgotPassword": "Forgot password?",
+      "forgotSending": "Sending…",
+      "forgotSent": "Check your email for a reset link.",
       "submit": "Sign in",
       "submitLoading": "Signing in…",
       "continueWith": "or continue with"
+    },
+    "reset": {
+      "verifying": "Verifying your reset link…",
+      "invalidTitle": "This link is invalid or expired",
+      "invalidSub": "Reset links expire after a short time. Request a new one from the login page.",
+      "backToLogin": "Back to login",
+      "title": "Set a new password",
+      "sub": "Choose a strong password — at least 8 characters.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "show": "Show",
+      "hide": "Hide",
+      "mismatch": "Passwords don't match.",
+      "submit": "Update password",
+      "saving": "Updating…",
+      "doneTitle": "Password updated",
+      "doneSub": "Redirecting you to login…"
     },
     "signup": {
       "panelHeadlineLine1": "Start making",

@@ -517,9 +517,28 @@
       "passwordPlaceholder": "••••••••",
       "passwordRequired": "La contraseña es obligatoria.",
       "forgotPassword": "¿Olvidaste tu contraseña?",
+      "forgotSending": "Enviando…",
+      "forgotSent": "Revisa tu correo para el enlace de restablecimiento.",
       "submit": "Iniciar sesión",
       "submitLoading": "Iniciando sesión…",
       "continueWith": "o continúa con"
+    },
+    "reset": {
+      "verifying": "Verificando tu enlace de restablecimiento…",
+      "invalidTitle": "Este enlace no es válido o ha expirado",
+      "invalidSub": "Los enlaces de restablecimiento caducan rápidamente. Solicita uno nuevo desde la página de inicio de sesión.",
+      "backToLogin": "Volver al inicio de sesión",
+      "title": "Establece una nueva contraseña",
+      "sub": "Elige una contraseña fuerte — al menos 8 caracteres.",
+      "newPassword": "Nueva contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "mismatch": "Las contraseñas no coinciden.",
+      "submit": "Actualizar contraseña",
+      "saving": "Actualizando…",
+      "doneTitle": "Contraseña actualizada",
+      "doneSub": "Redirigiéndote al inicio de sesión…"
     },
     "signup": {
       "panelHeadlineLine1": "Empieza a hacer",

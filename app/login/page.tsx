@@ -14,6 +14,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [resetState, setResetState] = useState<'idle' | 'sending' | 'sent'>('idle')
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -30,6 +31,24 @@ function LoginForm() {
     if (!password) e.password = tl('passwordRequired')
     setErrors(e)
     return Object.keys(e).length === 0
+  }
+
+  async function handleForgotPassword() {
+    if (!email.includes('@')) {
+      setErrors({ email: t('invalidEmail') })
+      return
+    }
+    setErrors({})
+    setResetState('sending')
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    })
+    if (error) {
+      setResetState('idle')
+      setErrors({ reset: error.message })
+      return
+    }
+    setResetState('sent')
   }
 
   async function handleOAuth(provider: 'google' | 'github') {
@@ -130,9 +149,26 @@ function LoginForm() {
             {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
 
-          <div className="flex justify-end mb-6">
-            <button className="text-xs text-emerald-600 font-medium hover:underline">{tl('forgotPassword')}</button>
+          <div className="flex justify-end mb-3">
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              disabled={resetState !== 'idle'}
+              className="text-xs text-emerald-600 font-medium hover:underline disabled:opacity-60"
+            >
+              {resetState === 'sending' ? tl('forgotSending') : tl('forgotPassword')}
+            </button>
           </div>
+          {resetState === 'sent' && (
+            <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 mb-3">
+              {tl('forgotSent')}
+            </p>
+          )}
+          {errors.reset && (
+            <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">
+              {errors.reset}
+            </p>
+          )}
 
           <button onClick={handleSubmit} disabled={loading}
             className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-700 transition disabled:opacity-60 flex items-center justify-center gap-2">
