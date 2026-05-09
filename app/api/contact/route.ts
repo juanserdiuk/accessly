@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
   if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 })
 
   if (!process.env.RESEND_API_KEY) {
-    console.warn('[contact] RESEND_API_KEY not set — add it to .env.local')
-    return NextResponse.json({ success: true })
+    console.error('[contact] RESEND_API_KEY not set — message dropped')
+    return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
   }
 
   const resend = new Resend(process.env.RESEND_API_KEY)

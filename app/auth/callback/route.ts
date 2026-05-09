@@ -8,7 +8,11 @@ const NEW_USER_WINDOW_MS = 10 * 60 * 1000 // 10 minutes
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+
+  // Only allow same-origin relative paths. Reject protocol-relative ("//evil.com"),
+  // backslash-prefixed, and absolute URLs to prevent open-redirect abuse.
+  const rawNext = searchParams.get('next')
+  const next = rawNext && /^\/(?![/\\])/.test(rawNext) ? rawNext : '/dashboard'
 
   if (code) {
     const cookieStore = await cookies()

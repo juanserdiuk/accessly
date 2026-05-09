@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        await supabase.from('scans').insert({
+        const { error } = await supabase.from('scans').insert({
           user_id: user.id, url,
           score:      result.score,
           errors:     result.errors,
@@ -24,9 +24,10 @@ export async function POST(req: NextRequest) {
           passes:     result.passes,
           violations: result.violations,
         })
+        if (error) console.error('[scan] failed to persist:', error.message)
       }
-    } catch {
-      // ignore — scan result is still returned
+    } catch (err) {
+      console.error('[scan] persist threw:', err)
     }
 
     return NextResponse.json(result)

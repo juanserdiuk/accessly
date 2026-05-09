@@ -39,6 +39,12 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    // Subscriptions need an authenticated user so the webhook can match the
+    // session back to a profile. One-time scan packs can stay open.
+    if (type === 'subscription' && !user) {
+      return NextResponse.json({ error: 'Sign in to start a subscription' }, { status: 401 })
+    }
+
     const siteUrl = getOrigin(req)
     const successUrl = `${siteUrl}/dashboard?checkout=success`
     const cancelUrl  = `${siteUrl}/#pricing`
