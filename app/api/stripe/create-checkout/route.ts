@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     const successUrl = `${SITE_URL}/dashboard?checkout=success`
-    const cancelUrl  = `${SITE_URL}/pricing`
+    const cancelUrl  = `${SITE_URL}/#pricing`
     const metadata   = { type, plan, billing }
 
     if (type === 'subscription') {
