@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { inviteMember } from './actions'
 
@@ -8,10 +8,16 @@ export default function InviteForm() {
   const t = useTranslations('dashboard.team')
   const [state, action, pending] = useActionState(inviteMember, null)
   const emailRef = useRef<HTMLInputElement>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   useEffect(() => {
     if (state?.success && emailRef.current) {
       emailRef.current.value = ''
+    }
+    if (state?.success) {
+      setShowSuccess(true)
+      const id = setTimeout(() => setShowSuccess(false), 3500)
+      return () => clearTimeout(id)
     }
   }, [state])
 
@@ -47,7 +53,7 @@ export default function InviteForm() {
       {state?.error && (
         <p className="text-xs text-red-500">{state.error}</p>
       )}
-      {state?.success && (
+      {showSuccess && state?.success && (
         <p className="text-xs text-emerald-600">{t('inviteSuccess')}</p>
       )}
     </form>

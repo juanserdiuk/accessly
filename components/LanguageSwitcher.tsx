@@ -1,5 +1,6 @@
 'use client'
 import { useLocale } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 
 const LOCALES = [
@@ -9,6 +10,7 @@ const LOCALES = [
 
 export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
   const locale = useLocale()
+  const router = useRouter()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -22,7 +24,10 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
 
   function switchLocale(code: string) {
     document.cookie = `NEXT_LOCALE=${code}; path=/; max-age=31536000; SameSite=Lax`
-    window.location.reload()
+    setOpen(false)
+    // router.refresh() re-renders server components in place — preserves
+    // form state and scroll position, unlike window.location.reload().
+    router.refresh()
   }
 
   const current = LOCALES.find(l => l.code === locale) ?? LOCALES[0]

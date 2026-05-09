@@ -7,21 +7,29 @@ export default function Footer() {
   const t = useTranslations('footer')
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.name || !form.email || !form.message) return
     setStatus('sending')
+    setErrorMsg('')
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setErrorMsg(data?.error ?? t('error'))
+        setStatus('error')
+        return
+      }
       setStatus('sent')
       setForm({ name: '', email: '', message: '' })
     } catch {
+      setErrorMsg(t('error'))
       setStatus('error')
     }
   }
@@ -128,7 +136,7 @@ export default function Footer() {
                 />
               </div>
               {status === 'error' && (
-                <p className="text-red-400 text-xs">{t('error')}</p>
+                <p className="text-red-400 text-xs">{errorMsg || t('error')}</p>
               )}
               <button
                 type="submit"
