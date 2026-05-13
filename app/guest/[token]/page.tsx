@@ -108,20 +108,72 @@ export default async function GuestPage({ params }: Props) {
         <div className="max-w-4xl mx-auto">
 
           <div className="text-center mb-8">
-            <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-3">
-              {t('guestAccess')} · {gt.label}
-            </p>
+            <div className="inline-flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold uppercase tracking-widest bg-gradient-to-r from-amber-400 to-emerald-400 bg-clip-text text-transparent">
+                Agency preview
+              </span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
+                · {gt.label}
+              </span>
+            </div>
             <h1 className="font-serif text-3xl text-slate-900 mb-2">
               {t('headline')}
             </h1>
             <p className="text-slate-500">
               {t('headlineSub')}
             </p>
+            <p className="text-xs text-slate-400 mt-3">
+              You&apos;re seeing the Accessly Agency experience — unlimited scans, white-label-ready reports, and the full feature set.
+            </p>
           </div>
 
           <div className="space-y-10">
             <GuestScanner />
             <DocScanner />
+
+            {/* Agency capabilities teaser */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-8 shadow-xl">
+              <div aria-hidden="true" className="absolute -top-20 -right-20 w-72 h-72 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none" />
+              <div aria-hidden="true" className="absolute -bottom-16 -left-16 w-56 h-56 bg-violet-500/15 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 bg-amber-400/15 border border-amber-400/30 text-amber-300 text-xs font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-wider">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  Agency tier
+                </div>
+                <h3 className="font-serif text-2xl text-white mb-5">Everything you unlock at Agency level</h3>
+                <div className="grid sm:grid-cols-2 gap-x-8 gap-y-3">
+                  {[
+                    'Unlimited scans across unlimited sites',
+                    'Scheduled monitoring (hourly / daily / weekly)',
+                    'Multi-page crawl — scan an entire domain',
+                    'White-label PDF reports with your branding',
+                    'Client portfolios — group sites per client',
+                    'Regression alerts via email + Slack',
+                    'CI/CD widget — embeddable score badges',
+                    'Unlimited team members',
+                  ].map(f => (
+                    <div key={f} className="flex items-start gap-2.5 text-sm text-white/75">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400 shrink-0 mt-1">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 flex items-center gap-3 flex-wrap">
+                  <Link
+                    href="/signup?plan=agency&billing=monthly"
+                    className="inline-flex items-center gap-2 bg-emerald-400 text-slate-900 font-bold px-5 py-3 rounded-xl hover:bg-emerald-300 transition text-sm shadow-lg shadow-emerald-400/30"
+                  >
+                    Start Agency trial
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                  </Link>
+                  <span className="text-xs text-white/40">$99/mo · cancel anytime</span>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
