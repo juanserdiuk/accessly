@@ -4,10 +4,11 @@ import { usePathname } from 'next/navigation'
 
 const links = [
   { label: 'Overview',     href: '/admin' },
+  { label: 'Analytics',    href: '/admin/analytics' },
   { label: 'Messages',     href: '/admin/messages' },
-  { label: 'Guest Access', href: '/admin/guests' },
   { label: 'Salespeople',  href: '/admin/sales' },
   { label: 'Promo Codes',  href: '/admin/promos' },
+  { label: 'Guest Access', href: '/admin/guests' },
 ]
 
 export default function AdminNav() {
