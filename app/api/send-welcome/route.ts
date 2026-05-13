@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendWelcomeEmail } from '@/lib/email/sendWelcome'
+import { notifyAdmin } from '@/lib/email/notifyAdmin'
 
 export async function POST(req: NextRequest) {
   let email: string, firstName: string
@@ -17,6 +18,16 @@ export async function POST(req: NextRequest) {
 
   try {
     await sendWelcomeEmail(email, firstName)
+    // Fire-and-forget — admin notification never blocks the user's signup
+    notifyAdmin({
+      subject: `[Accessly] New signup: ${email}`,
+      heading: 'New account created',
+      rows: [
+        { label: 'Email', value: email },
+        { label: 'Name', value: firstName || '—' },
+        { label: 'When', value: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) },
+      ],
+    }).catch(() => {})
     return NextResponse.json({ ok: true })
   } catch (err: any) {
     console.error('[send-welcome]', err)

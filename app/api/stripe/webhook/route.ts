@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyAdmin } from '@/lib/email/notifyAdmin'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
+
+function formatCurrency(amountCents: number | null | undefined, currency = 'usd') {
+  if (amountCents == null) return '—'
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: currency.toUpperCase(),
+  }).format(amountCents / 100)
+}
 
 const PACK_CREDITS: Record<string, number> = {
   'starter':     10,
@@ -50,6 +59,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         updated_at: new Date().toISOString(),
       }, { onConflict: 'id' })
   }
+
+  // Notify admin of every successful purchase (fire-and-forget).
+  const customerEmail =
+    session.customer_details?.email ?? session.customer_email ?? '—'
+  const amount = formatCurrency(session.amount_total, session.currency ?? 'usd')
+  const niceType = type === 'subscription' ? 'Subscription' : 'Scan pack'
+  notifyAdmin({
+    subject: `[Accessly] 💰 ${niceType}: ${plan} — ${amount}`,
+    heading: `New ${niceType.toLowerCase()} purchased`,
+    rows: [
+      { label: 'Customer', value: customerEmail },
+      { label: 'Plan', value: plan },
+      { label: 'Type', value: niceType },
+      { label: 'Amount', value: amount },
+      { label: 'When', value: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) },
+      { label: 'Session', value: session.id },
+    ],
+  }).catch(() => {})
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
