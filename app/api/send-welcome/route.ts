@@ -18,6 +18,16 @@ export async function POST(req: NextRequest) {
 
   try {
     await sendWelcomeEmail(email, firstName)
+
+    // Geolocation from Vercel-injected headers — best-effort, never gates
+    // the response.
+    const country = req.headers.get('x-vercel-ip-country') ?? null
+    const city = req.headers.get('x-vercel-ip-city') ?? null
+    const region = req.headers.get('x-vercel-ip-country-region') ?? null
+    const location = [city ? decodeURIComponent(city) : null, region, country]
+      .filter(Boolean)
+      .join(', ') || '—'
+
     // Fire-and-forget — admin notification never blocks the user's signup
     notifyAdmin({
       subject: `[Accessly] New signup: ${email}`,
@@ -25,6 +35,7 @@ export async function POST(req: NextRequest) {
       rows: [
         { label: 'Email', value: email },
         { label: 'Name', value: firstName || '—' },
+        { label: 'Location', value: location },
         { label: 'When', value: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) },
       ],
     }).catch(() => {})
