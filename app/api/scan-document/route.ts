@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
+import { extractText, getMeta, extractLinks, getDocumentProxy } from 'unpdf'
 
 interface Check {
   id: string
@@ -11,78 +11,51 @@ interface Check {
 }
 
 async function checkPdf(buffer: Buffer): Promise<Check[]> {
-  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
+  // unpdf wraps pdfjs-dist and works cleanly in Node/serverless. Use the
+  // document proxy once so we can read everything (text, meta, outline,
+  // links) without re-parsing.
+  const data = new Uint8Array(buffer)
 
-  // pdfjs-dist v5 requires a real worker — resolve path from project root
-  const workerPath = path.resolve(process.cwd(), 'node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'file://' + workerPath
-
-  let doc: Awaited<ReturnType<typeof pdfjsLib.getDocument>['promise']>
+  let pdf: Awaited<ReturnType<typeof getDocumentProxy>>
   try {
-    doc = await pdfjsLib.getDocument({
-      data: new Uint8Array(buffer),
-      useSystemFonts: true,
-      disableFontFace: true,
-      verbosity: 0,
-    }).promise
+    pdf = await getDocumentProxy(data, { useSystemFonts: true })
   } catch (err: any) {
+    console.error('[scan-document] unpdf load failed:', err?.name, err?.message)
     if (err?.name === 'PasswordException') {
       throw new Error('This PDF is password-protected. Remove the password protection and re-upload to check accessibility.')
     }
     throw new Error("We couldn't read this document. Make sure it's a valid, non-corrupted PDF.")
   }
 
-  // Metadata (Title, Language)
+  const numpages = pdf.numPages
+
+  // Metadata (Title, Language) — Document Info dictionary
   let info: Record<string, string> = {}
   try {
-    const meta = await doc.getMetadata()
+    const meta = await getMeta(pdf)
     info = (meta.info ?? {}) as Record<string, string>
   } catch {}
 
   // Bookmarks / outline
   let hasOutline = false
   try {
-    const outline = await doc.getOutline()
+    const outline = await pdf.getOutline()
     hasOutline = Array.isArray(outline) && outline.length > 0
   } catch {}
 
-  const numpages = doc.numPages
-
-  // Extract text + link annotations from all pages
+  // Extract text per page so we can detect structural variation (heading heuristic)
   let text = ''
+  try {
+    const { text: pages } = await extractText(pdf, { mergePages: false })
+    text = pages.map(p => p.trim()).filter(Boolean).join('\n')
+  } catch {}
+
+  // Link annotations across the document
   const pageLinks: Array<{ contents: string; url: string }> = []
-
-  for (let i = 1; i <= numpages; i++) {
-    let page: Awaited<ReturnType<typeof doc.getPage>>
-    try {
-      page = await doc.getPage(i)
-    } catch {
-      continue
-    }
-
-    try {
-      const content = await page.getTextContent()
-      const pageText = content.items
-        .filter((item): item is typeof item & { str: string } => 'str' in item)
-        .map(item => item.str)
-        .join(' ')
-      if (pageText.trim()) text += (text ? '\n' : '') + pageText
-    } catch {}
-
-    try {
-      const annotations = await page.getAnnotations()
-      for (const ann of annotations) {
-        if (ann.subtype === 'Link' && ann.url) {
-          pageLinks.push({
-            contents: (ann.contentsObj as any)?.str ?? ann.contents ?? '',
-            url: ann.url,
-          })
-        }
-      }
-    } catch {}
-  }
-
-  text = text.trim()
+  try {
+    const { links } = await extractLinks(pdf)
+    for (const url of links) pageLinks.push({ contents: '', url })
+  } catch {}
 
   // Heading heuristic: structural docs have short lines mixed with long ones
   const nonEmptyLines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0)
