@@ -37,9 +37,13 @@ export default function Footer() {
   const footerLinks = [
     { label: t('features'), href: '/#features' },
     { label: t('pricing'),  href: '/#pricing'  },
+    { label: t('faq'),      href: '/#faq'      },
     { label: t('privacy'),  href: '/privacy'   },
     { label: t('terms'),    href: '/terms'      },
+    { label: t('sitemap'),  href: '/sitemap.xml' },
   ]
+
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
 
   return (
     <footer className="bg-slate-900">
@@ -163,12 +167,15 @@ export default function Footer() {
           </div>
           Accessly
         </Link>
-        <div className="flex gap-6">
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
           {footerLinks.map(({ label, href }) => (
             <Link key={label} href={href} className="text-sm text-white/40 hover:text-white/80 transition">{label}</Link>
           ))}
         </div>
-        <p className="text-sm text-white/30">{t('copyright')}</p>
+        <div className="flex flex-col sm:items-end gap-1">
+          <p className="text-sm text-white/30">{t('copyright')}</p>
+          <p className="text-[10px] font-mono text-white/20" title="Build version">{t('version', { version: appVersion })}</p>
+        </div>
       </div>
     </footer>
   )

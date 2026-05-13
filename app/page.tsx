@@ -5,6 +5,7 @@ import ScanSection from '@/components/ScanSection'
 import Features from '@/components/Features'
 import Testimonials from '@/components/Testimonials'
 import Pricing from '@/components/Pricing'
+import Faq from '@/components/Faq'
 import Footer from '@/components/Footer'
 
 export default function Home() {
@@ -17,6 +18,7 @@ export default function Home() {
       <Features />
       <Testimonials />
       <Pricing />
+      <Faq />
       <Footer />
     </main>
   )
