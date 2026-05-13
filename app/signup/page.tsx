@@ -1,11 +1,13 @@
 'use client'
-import { useState, Suspense } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
 const plans = ['Free','Pro','Agency']
 const prices: Record<string, string> = { Free: '$0/mo', Pro: '$29/mo', Agency: '$99/mo' }
+const planParamMap: Record<string, string> = { pro: 'Pro', agency: 'Agency', free: 'Free' }
 
 function getStrength(pw: string) {
   let s = 0
@@ -19,8 +21,13 @@ function getStrength(pw: string) {
 function SignupForm() {
   const t = useTranslations('auth')
   const ts = useTranslations('auth.signup')
+  const searchParams = useSearchParams()
+  // Preselect plan + remember billing cadence when arriving from Pricing.
+  const planParam = (searchParams.get('plan') ?? '').toLowerCase()
+  const billingParam = searchParams.get('billing') === 'annual' ? 'annual' : 'monthly'
+  const initialPlan = planParamMap[planParam] ?? 'Pro'
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
-  const [plan, setPlan] = useState('Pro')
+  const [plan, setPlan] = useState(initialPlan)
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [oauthLoading, setOauthLoading] = useState<'google' | 'github' | null>(null)
@@ -65,11 +72,20 @@ function SignupForm() {
     if (!validate()) return
     setLoading(true)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    const { error } = await supabase.auth.signUp({
+    // If the visitor arrived from Pricing with ?plan=pro/agency, ask the
+    // OAuth callback to resume checkout once they confirm their email.
+    const wantsCheckout = plan === 'Pro' || plan === 'Agency'
+    const slug = plan.toLowerCase()
+    const callbackNext = wantsCheckout
+      ? `/auth/start-checkout?plan=${slug}&billing=${billingParam}`
+      : '/dashboard'
+    const emailRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(callbackNext)}`
+
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        emailRedirectTo: `${siteUrl}/auth/callback`,
+        emailRedirectTo,
         data: { first_name: form.firstName, last_name: form.lastName, plan },
       },
     })
@@ -84,6 +100,14 @@ function SignupForm() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: form.email, firstName: form.firstName }),
     }).catch(() => {})
+
+    // If the project has email confirmation disabled, signUp returns a
+    // session immediately — go straight to checkout without waiting for the
+    // confirm email round-trip.
+    if (wantsCheckout && data.session) {
+      window.location.href = callbackNext
+      return
+    }
     setDone(true)
   }
 

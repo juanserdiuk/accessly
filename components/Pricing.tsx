@@ -3,20 +3,34 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
-async function startCheckout(type: string, plan: string, billing?: string) {
+async function startCheckout(type: string, plan: string, billing?: string): Promise<string | null> {
   const res = await fetch('/api/stripe/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, plan, billing }),
   })
-  const data = await res.json()
-  if (data.url) window.location.href = data.url
+  const data = await res.json().catch(() => ({}))
+
+  // Subscriptions require auth — send the visitor to signup, then resume
+  // checkout from there once the account is created.
+  if (res.status === 401 && type === 'subscription') {
+    const params = new URLSearchParams({ plan, billing: billing ?? 'monthly' })
+    window.location.href = `/signup?${params}`
+    return null
+  }
+
+  if (data.url) {
+    window.location.href = data.url
+    return null
+  }
+  return data?.error ?? `Checkout failed (${res.status})`
 }
 
 export default function Pricing() {
   const t = useTranslations('pricing')
   const [annual, setAnnual] = useState(false)
   const [loadingKey, setLoadingKey] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const packs = [
     { name: t('packStarterName'), slug: 'starter',     pages: 10,  price: 9,  perPage: '0.90' },
@@ -51,8 +65,10 @@ export default function Pricing() {
 
   async function handleCheckout(key: string, type: string, plan: string, billing?: string) {
     setLoadingKey(key)
+    setError(null)
     try {
-      await startCheckout(type, plan, billing)
+      const errMsg = await startCheckout(type, plan, billing)
+      if (errMsg) setError(errMsg)
     } finally {
       setLoadingKey(null)
     }
@@ -125,6 +141,15 @@ export default function Pricing() {
           <span className="text-sm font-medium text-slate-500 leading-none">{t('annual')}</span>
           <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full leading-none">{t('save20')}</span>
         </div>
+
+        {error && (
+          <div className="max-w-md mx-auto mb-6 flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            {error}
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-5 items-center">
           {plans.map((plan) => {
