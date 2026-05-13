@@ -28,6 +28,11 @@ const planBadge: Record<string, string> = {
   agency: 'bg-amber-100 text-amber-700',
 }
 
+function flag(country: string | null) {
+  if (!country || country.length !== 2) return ''
+  return String.fromCodePoint(...country.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)))
+}
+
 export default async function AdminPage() {
   const supabase = createAdminClient()
 
@@ -49,9 +54,8 @@ export default async function AdminPage() {
       .select('id, url, score, errors, warnings, user_id, created_at')
       .order('created_at', { ascending: false })
       .limit(10),
-    // Pull stripe_customer_id so we can count one-time pack buyers in
-    // the conversion rate, not just active subscribers.
-    supabase.from('profiles').select('id, plan, stripe_customer_id'),
+    // Pull stripe_customer_id + geo so admin can see who's paying and where.
+    supabase.from('profiles').select('id, plan, stripe_customer_id, country, city'),
     supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ])
 
@@ -74,9 +78,21 @@ export default async function AdminPage() {
   const planMap: Record<string, string> = Object.fromEntries(
     profiles.map(p => [p.id, p.plan])
   )
+  const geoMap: Record<string, { country: string | null; city: string | null }> = Object.fromEntries(
+    profiles.map(p => [p.id, { country: p.country ?? null, city: p.city ?? null }])
+  )
   const userEmailMap: Record<string, string> = Object.fromEntries(
     allUsers.map(u => [u.id, u.email ?? '—'])
   )
+
+  // Country distribution for the geography card
+  const countryCounts: Record<string, number> = {}
+  for (const p of profiles) {
+    if (p.country) countryCounts[p.country] = (countryCounts[p.country] ?? 0) + 1
+  }
+  const topCountries = Object.entries(countryCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5)
 
   // Recent signups — sort auth users by created_at desc
   const recentSignups = [...allUsers]
@@ -86,6 +102,8 @@ export default async function AdminPage() {
       id: u.id,
       email: u.email ?? '—',
       plan: planMap[u.id] ?? 'free',
+      country: geoMap[u.id]?.country ?? null,
+      city: geoMap[u.id]?.city ?? null,
       created_at: u.created_at,
     }))
 
@@ -169,6 +187,24 @@ export default async function AdminPage() {
         ))}
       </div>
 
+      {/* Top countries */}
+      {topCountries.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-2xl p-5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Top countries</p>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {topCountries.map(([code, count]) => (
+              <div key={code} className="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5">
+                <span className="text-2xl leading-none">{flag(code)}</span>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-slate-800">{code}</div>
+                  <div className="text-xs text-slate-400">{count} user{count === 1 ? '' : 's'}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Plan breakdown bar */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">Plan distribution</p>
@@ -209,23 +245,29 @@ export default async function AdminPage() {
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Email</th>
                 <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Plan</th>
+                <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Location</th>
                 <th className="text-left px-3 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Joined</th>
               </tr>
             </thead>
             <tbody>
               {recentSignups.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-5 py-10 text-center text-xs text-slate-400">No users yet</td>
+                  <td colSpan={4} className="px-5 py-10 text-center text-xs text-slate-400">No users yet</td>
                 </tr>
               ) : recentSignups.map(u => (
                 <tr key={u.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition">
                   <td className="px-5 py-3">
-                    <span className="font-medium text-slate-700 truncate block max-w-[170px]">{u.email}</span>
+                    <span className="font-medium text-slate-700 truncate block max-w-[200px]">{u.email}</span>
                   </td>
                   <td className="px-3 py-3">
                     <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full capitalize ${planBadge[u.plan] ?? planBadge.free}`}>
                       {u.plan}
                     </span>
+                  </td>
+                  <td className="px-3 py-3 text-xs text-slate-500 whitespace-nowrap">
+                    {u.country ? (
+                      <span><span className="mr-1.5">{flag(u.country)}</span>{u.city ? `${u.city}, ` : ''}{u.country}</span>
+                    ) : '—'}
                   </td>
                   <td className="px-3 py-3 text-xs text-slate-400 whitespace-nowrap">{relativeTime(u.created_at)}</td>
                 </tr>

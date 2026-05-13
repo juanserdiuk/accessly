@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -25,6 +26,23 @@ export async function POST(req: NextRequest) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
   if (!message) return NextResponse.json({ error: 'Message is required' }, { status: 400 })
+
+  // Capture Vercel-injected geo headers for the admin record
+  const country = req.headers.get('x-vercel-ip-country') ?? null
+  const city    = req.headers.get('x-vercel-ip-city')
+  const region  = req.headers.get('x-vercel-ip-country-region') ?? null
+  const decodedCity = city ? decodeURIComponent(city) : null
+
+  // Persist to admin Messages tab (non-fatal — never block the form)
+  try {
+    const admin = createAdminClient()
+    await admin.from('contact_messages').insert({
+      name, email, website: url || null, message,
+      country, city: decodedCity, region,
+    })
+  } catch (err) {
+    console.error('[contact] db insert failed:', err)
+  }
 
   if (!process.env.RESEND_API_KEY) {
     console.error('[contact] RESEND_API_KEY not set — message dropped')

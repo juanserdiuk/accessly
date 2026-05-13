@@ -4,7 +4,10 @@ import { usePathname } from 'next/navigation'
 
 const links = [
   { label: 'Overview',     href: '/admin' },
+  { label: 'Messages',     href: '/admin/messages' },
   { label: 'Guest Access', href: '/admin/guests' },
+  { label: 'Salespeople',  href: '/admin/sales' },
+  { label: 'Promo Codes',  href: '/admin/promos' },
 ]
 
 export default function AdminNav() {
