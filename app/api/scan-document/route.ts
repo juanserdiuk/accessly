@@ -251,14 +251,23 @@ export async function POST(req: NextRequest) {
   }
 
   const file = fd.get('file') as File | null
-  if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+  if (!file) return NextResponse.json({ error: 'No file provided.' }, { status: 400 })
 
   const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
   if (!['pdf', 'docx'].includes(ext))
-    return NextResponse.json({ error: 'Only PDF (.pdf) and Word (.docx) files are supported' }, { status: 400 })
+    return NextResponse.json(
+      { error: `This file type isn't supported. Upload a PDF (.pdf) or Word (.docx) document.` },
+      { status: 400 },
+    )
+
+  if (file.size === 0)
+    return NextResponse.json({ error: 'That file is empty.' }, { status: 400 })
 
   if (file.size > 10 * 1024 * 1024)
-    return NextResponse.json({ error: 'File size must be under 10 MB' }, { status: 400 })
+    return NextResponse.json(
+      { error: `That file is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). The limit is 10 MB.` },
+      { status: 400 },
+    )
 
   const buffer = Buffer.from(await file.arrayBuffer())
 
@@ -266,7 +275,19 @@ export async function POST(req: NextRequest) {
   try {
     checks = ext === 'pdf' ? await checkPdf(buffer) : await checkDocx(buffer)
   } catch (e) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unexpected error' }, { status: 422 })
+    const raw = e instanceof Error ? e.message : 'Unexpected error'
+    console.error('[scan-document] check failed:', raw)
+    // checkPdf / checkDocx already throw human-friendly messages for the
+    // common cases (password-protected, corrupt). Pass those through;
+    // mask anything else as a generic "couldn't read".
+    const isFriendly =
+      raw.includes('password-protected') ||
+      raw.includes("couldn't read") ||
+      raw.includes('valid .docx')
+    return NextResponse.json(
+      { error: isFriendly ? raw : "We couldn't read this document. It may be unsupported or corrupted." },
+      { status: 422 },
+    )
   }
 
   const violations = checks.filter(c => !c.passed)
