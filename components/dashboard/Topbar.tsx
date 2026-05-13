@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import GlobalSearch from './GlobalSearch'
 
 interface Props {
   title: string
@@ -16,6 +17,7 @@ export default function Topbar({ title, subtitle }: Props) {
         {subtitle && <p className="text-xs text-slate-400 mt-0.5 truncate">{subtitle}</p>}
       </div>
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        <GlobalSearch />
         <button className="relative w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition">
           🔔
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
