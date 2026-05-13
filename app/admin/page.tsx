@@ -49,7 +49,9 @@ export default async function AdminPage() {
       .select('id, url, score, errors, warnings, user_id, created_at')
       .order('created_at', { ascending: false })
       .limit(10),
-    supabase.from('profiles').select('id, plan'),
+    // Pull stripe_customer_id so we can count one-time pack buyers in
+    // the conversion rate, not just active subscribers.
+    supabase.from('profiles').select('id, plan, stripe_customer_id'),
     supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
   ])
 
@@ -58,13 +60,19 @@ export default async function AdminPage() {
   const totalScans = totalScansRes.count ?? 0
   const proCount = proCountRes.count ?? 0
   const agencyCount = agencyCountRes.count ?? 0
-  const paidCount = proCount + agencyCount
+  const subCount = proCount + agencyCount
   const mrr = proCount * 29 + agencyCount * 99
   const scansThisMonth = scansThisMonthRes.count ?? 0
 
+  // Anyone with a Stripe customer id has paid us at least once — subscriber
+  // OR one-time pack buyer. That's the right denominator for conversion.
+  const profiles = allProfilesRes.data ?? []
+  const paidCount = profiles.filter(p => !!p.stripe_customer_id).length
+  const packOnlyCount = Math.max(0, paidCount - subCount)
+
   // Build lookup maps
   const planMap: Record<string, string> = Object.fromEntries(
-    (allProfilesRes.data ?? []).map(p => [p.id, p.plan])
+    profiles.map(p => [p.id, p.plan])
   )
   const userEmailMap: Record<string, string> = Object.fromEntries(
     allUsers.map(u => [u.id, u.email ?? '—'])
@@ -128,7 +136,7 @@ export default async function AdminPage() {
     {
       label: 'Conversion rate',
       value: `${conversionRate}%`,
-      sub: `${paidCount} of ${totalUsers} users paying`,
+      sub: `${paidCount} paying (${subCount} sub · ${packOnlyCount} pack)`,
       color: 'text-violet-600',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500">
@@ -139,7 +147,7 @@ export default async function AdminPage() {
   ]
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
 
       {/* Page title */}
       <div>
@@ -148,7 +156,7 @@ export default async function AdminPage() {
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {stats.map(({ label, value, sub, color, icon }) => (
           <div key={label} className="bg-white border border-slate-200 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
@@ -186,8 +194,8 @@ export default async function AdminPage() {
         </div>
       </div>
 
-      {/* Recent signups + Recent scans */}
-      <div className="grid grid-cols-2 gap-6">
+      {/* Recent signups + Recent scans — stacked full-width */}
+      <div className="space-y-6">
 
         {/* Recent signups */}
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
@@ -195,7 +203,8 @@ export default async function AdminPage() {
             <p className="font-semibold text-slate-900">Recent signups</p>
             <p className="text-xs text-slate-400 mt-0.5">Last 10 new accounts</p>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">Email</th>
@@ -223,6 +232,7 @@ export default async function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Recent scans */}
@@ -231,7 +241,8 @@ export default async function AdminPage() {
             <p className="font-semibold text-slate-900">Recent scans</p>
             <p className="text-xs text-slate-400 mt-0.5">Last 10 across all users</p>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
                 <th className="text-left px-5 py-2.5 text-xs font-semibold text-slate-400 uppercase tracking-wide">URL</th>
@@ -258,6 +269,7 @@ export default async function AdminPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
       </div>

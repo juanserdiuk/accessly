@@ -16,18 +16,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-slate-900 border-b border-white/10 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <div className="w-7 h-7 bg-emerald-400 rounded-lg flex items-center justify-center shrink-0">
               <span className="text-slate-900 text-xs font-bold">A</span>
             </div>
             <span className="font-serif text-lg text-white">Accessly</span>
-            <span className="text-xs font-bold bg-red-500 text-white px-2 py-0.5 rounded-full tracking-wide">
+            <span className="text-[10px] sm:text-xs font-bold bg-red-500 text-white px-2 py-0.5 rounded-full tracking-wide shrink-0">
               ADMIN
             </span>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-white/40 hidden sm:block">{user.email}</span>
+          <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+            <span className="text-xs text-white/40 hidden md:block truncate max-w-[200px]">{user.email}</span>
             <Link
               href="/dashboard"
               className="text-xs font-medium text-white/60 hover:text-white transition flex items-center gap-1"

@@ -10,8 +10,8 @@ const links = [
 export default function AdminNav() {
   const path = usePathname()
   return (
-    <nav className="bg-white border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-6 flex gap-1 h-11 items-end">
+    <nav className="bg-white border-b border-slate-200 overflow-x-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 h-11 items-end">
         {links.map(({ label, href }) => {
           const active = path === href
           return (
