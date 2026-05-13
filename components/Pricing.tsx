@@ -2,12 +2,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
+import PromoModal from './PromoModal'
 
-async function startCheckout(type: string, plan: string, billing?: string): Promise<string | null> {
+async function startCheckout(type: string, plan: string, billing?: string, promoCode?: string | null): Promise<string | null> {
   const res = await fetch('/api/stripe/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type, plan, billing }),
+    body: JSON.stringify({ type, plan, billing, promoCode: promoCode ?? undefined }),
   })
   const data = await res.json().catch(() => ({}))
 
@@ -31,6 +32,7 @@ export default function Pricing() {
   const [annual, setAnnual] = useState(false)
   const [loadingKey, setLoadingKey] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [promoIntent, setPromoIntent] = useState<{ key: string; type: string; plan: string; billing?: string } | null>(null)
 
   const packs = [
     { name: t('packStarterName'), slug: 'starter',     pages: 10,  price: 9,  perPage: '0.90' },
@@ -63,11 +65,20 @@ export default function Pricing() {
     },
   ]
 
-  async function handleCheckout(key: string, type: string, plan: string, billing?: string) {
-    setLoadingKey(key)
+  function handleCheckout(key: string, type: string, plan: string, billing?: string) {
+    // Show the promo modal first; PromoModal will call back with the code
+    // (or null) and we'll actually start checkout from there.
     setError(null)
+    setPromoIntent({ key, type, plan, billing })
+  }
+
+  async function continueWithCode(code: string | null) {
+    if (!promoIntent) return
+    const { key, type, plan, billing } = promoIntent
+    setPromoIntent(null)
+    setLoadingKey(key)
     try {
-      const errMsg = await startCheckout(type, plan, billing)
+      const errMsg = await startCheckout(type, plan, billing, code)
       if (errMsg) setError(errMsg)
     } finally {
       setLoadingKey(null)
@@ -194,6 +205,12 @@ export default function Pricing() {
           })}
         </div>
       </div>
+
+      <PromoModal
+        open={promoIntent !== null}
+        onClose={() => setPromoIntent(null)}
+        onContinue={continueWithCode}
+      />
     </section>
   )
 }

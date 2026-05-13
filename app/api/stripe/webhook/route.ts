@@ -60,9 +60,56 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }, { onConflict: 'id' })
   }
 
-  // Notify admin of every successful purchase (fire-and-forget).
+  // Record promo redemption + commission snapshot if a promo code was used.
+  const promoCodeId      = session.metadata?.promo_code_id
+  const promoCode        = session.metadata?.promo_code
+  const salespersonId    = session.metadata?.salesperson_id
   const customerEmail =
     session.customer_details?.email ?? session.customer_email ?? '—'
+
+  if (promoCodeId) {
+    try {
+      let commissionCents = 0
+      if (salespersonId) {
+        const { data: sp } = await supabase
+          .from('salespeople').select('commission_percent').eq('id', salespersonId).single()
+        const pct = Number(sp?.commission_percent ?? 0)
+        commissionCents = Math.round(((session.amount_total ?? 0) * pct) / 100)
+      }
+      await supabase.from('promo_redemptions').insert({
+        code_id: promoCodeId,
+        salesperson_id: salespersonId ?? null,
+        user_id: userId,
+        customer_email: customerEmail,
+        amount_cents: session.amount_total ?? 0,
+        currency: session.currency ?? 'usd',
+        plan,
+        product_type: type,
+        stripe_session_id: session.id,
+        commission_cents: commissionCents,
+      })
+      // Atomically bump uses_count
+      await supabase.rpc('increment_promo_uses' as any, { promo_id: promoCodeId } as any)
+        .then(({ error }) => {
+          if (error) {
+            // Fallback: read-modify-write
+            supabase.from('promo_codes').select('uses_count').eq('id', promoCodeId).single()
+              .then(({ data }) => {
+                if (data) {
+                  supabase.from('promo_codes')
+                    .update({ uses_count: (data.uses_count ?? 0) + 1 })
+                    .eq('id', promoCodeId)
+                    .then()
+                }
+              })
+          }
+        })
+    } catch (err) {
+      console.error('[webhook] promo redemption record failed:', err)
+    }
+  }
+
+  // Notify admin of every successful purchase (fire-and-forget).
   const amount = formatCurrency(session.amount_total, session.currency ?? 'usd')
   const niceType = type === 'subscription' ? 'Subscription' : 'Scan pack'
   notifyAdmin({
@@ -73,6 +120,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       { label: 'Plan', value: plan },
       { label: 'Type', value: niceType },
       { label: 'Amount', value: amount },
+      ...(promoCode ? [{ label: 'Promo code', value: promoCode }] : []),
       { label: 'When', value: new Date().toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) },
       { label: 'Session', value: session.id },
     ],

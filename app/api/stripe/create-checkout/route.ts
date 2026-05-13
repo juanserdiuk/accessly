@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 function getOrigin(req: NextRequest) {
   // Prefer the actual request origin so checkout redirects always come back
@@ -33,7 +34,7 @@ const SCAN_PACKS = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { type, plan, billing = 'monthly' } = await req.json()
+    const { type, plan, billing = 'monthly', promoCode } = await req.json()
 
     if (!type || !plan) {
       return NextResponse.json({ error: 'Missing type or plan' }, { status: 400 })
@@ -48,10 +49,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sign in to start a subscription' }, { status: 401 })
     }
 
+    // Validate the promo code (if provided) and gather Stripe coupon id +
+    // the metadata we need to attribute the sale to a salesperson later.
+    let stripeCouponId: string | undefined
+    let promoMetadata: Record<string, string> = {}
+    if (promoCode && typeof promoCode === 'string') {
+      const admin = createAdminClient()
+      const { data: promo } = await admin
+        .from('promo_codes')
+        .select('id, code, salesperson_id, discount_percent, stripe_coupon_id, max_uses, uses_count, expires_at, status')
+        .ilike('code', promoCode.trim())
+        .maybeSingle()
+
+      if (promo && promo.status === 'active') {
+        const expired = promo.expires_at && new Date(promo.expires_at) < new Date()
+        const maxedOut = promo.max_uses !== null && promo.uses_count >= promo.max_uses
+        if (!expired && !maxedOut) {
+          stripeCouponId = promo.stripe_coupon_id
+          promoMetadata = {
+            promo_code_id: promo.id,
+            promo_code: promo.code,
+            promo_discount_percent: String(promo.discount_percent),
+            ...(promo.salesperson_id ? { salesperson_id: promo.salesperson_id } : {}),
+          }
+        }
+      }
+    }
+
     const siteUrl = getOrigin(req)
     const successUrl = `${siteUrl}/dashboard?checkout=success`
     const cancelUrl  = `${siteUrl}/#pricing`
-    const metadata   = { type, plan, billing }
+    const metadata   = { type, plan, billing, ...promoMetadata }
+    const discounts  = stripeCouponId ? [{ coupon: stripeCouponId }] : undefined
 
     if (type === 'subscription') {
       const planConfig = SUBSCRIPTION_PLANS[plan as keyof typeof SUBSCRIPTION_PLANS]
@@ -64,6 +93,7 @@ export async function POST(req: NextRequest) {
         mode: 'subscription',
         client_reference_id: user?.id,
         metadata,
+        ...(discounts ? { discounts } : {}),
         line_items: [{
           price_data: {
             currency: 'usd',
@@ -90,6 +120,7 @@ export async function POST(req: NextRequest) {
         mode: 'payment',
         client_reference_id: user?.id,
         metadata,
+        ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         line_items: [{
           price_data: {
             currency: 'usd',
