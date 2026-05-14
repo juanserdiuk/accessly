@@ -40,7 +40,7 @@ export default function Footer() {
     { label: t('faq'),      href: '/#faq'      },
     { label: t('privacy'),  href: '/privacy'   },
     { label: t('terms'),    href: '/terms'      },
-    { label: t('sitemap'),  href: '/sitemap.xml' },
+    { label: t('sitemap'),  href: '/sitemap' },
   ]
 
   const appVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0'
