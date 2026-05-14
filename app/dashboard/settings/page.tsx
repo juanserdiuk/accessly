@@ -40,13 +40,16 @@ export default async function SettingsPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('plan, stripe_customer_id')
+    .select('plan, stripe_customer_id, first_name, last_name, company, country, avatar_url')
     .eq('id', user!.id)
     .single()
 
   const meta      = user!.user_metadata ?? {}
-  const firstName = (meta.first_name as string) ?? ''
-  const lastName  = (meta.last_name  as string) ?? ''
+  const firstName = profile?.first_name ?? (meta.first_name as string) ?? ''
+  const lastName  = profile?.last_name  ?? (meta.last_name  as string) ?? ''
+  const company   = profile?.company ?? ''
+  const country   = profile?.country ?? ''
+  const avatarUrl = profile?.avatar_url ?? null
   const email     = user!.email ?? ''
   const plan        = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
   const hasCustomer = !!profile?.stripe_customer_id
@@ -60,7 +63,14 @@ export default async function SettingsPage() {
       <div className="p-4 sm:p-7 max-w-3xl space-y-4">
 
         <Section title={t('profileTitle')} description={t('profileDesc')}>
-          <ProfileForm firstName={firstName} lastName={lastName} email={email} />
+          <ProfileForm
+            firstName={firstName}
+            lastName={lastName}
+            email={email}
+            company={company}
+            country={country}
+            avatarUrl={avatarUrl}
+          />
         </Section>
 
         <Section title={t('passwordTitle')} description={t('passwordDesc')}>

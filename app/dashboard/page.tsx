@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from 'next-intl/server'
 import Topbar from '@/components/dashboard/Topbar'
 import MetricCard from '@/components/dashboard/MetricCard'
 import QuickScan from '@/components/dashboard/QuickScan'
+import WelcomeBanner from '@/components/dashboard/WelcomeBanner'
 
 type Scan = {
   id: string
@@ -118,7 +119,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
 
   const [profileRes, scansRes] = await Promise.all([
-    supabase.from('profiles').select('plan, scan_count').eq('id', user!.id).single(),
+    supabase.from('profiles').select('plan, scan_count, first_name').eq('id', user!.id).single(),
     supabase.from('scans')
       .select('id, url, score, errors, warnings, passes, created_at')
       .eq('user_id', user!.id)
@@ -126,9 +127,34 @@ export default async function DashboardPage() {
       .limit(50),
   ])
 
+  const profile = profileRes.data
+  const plan = (profile?.plan ?? 'free') as string
+  const firstName = profile?.first_name ?? (user!.user_metadata?.first_name as string | undefined) ?? null
+
   const scans: Scan[] = scansRes.data ?? []
 
-  if (scans.length === 0) return <EmptyState />
+  if (scans.length === 0) {
+    return (
+      <div className="flex-1 overflow-y-auto">
+        <Topbar title={t('title')} />
+        <div className="p-4 sm:p-7 space-y-5">
+          <WelcomeBanner firstName={firstName} plan={plan} />
+          <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">
+            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+            <h2 className="font-serif text-2xl text-slate-900 mb-2">{t('emptyTitle')}</h2>
+            <p className="text-slate-500 text-sm mb-8 max-w-sm leading-relaxed">{t('emptySub')}</p>
+            <div className="w-full max-w-md">
+              <QuickScan />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // Derived metrics
   const avgScore = Math.round(scans.reduce((s, r) => s + r.score, 0) / scans.length)
@@ -153,6 +179,8 @@ export default async function DashboardPage() {
       <Topbar title={t('title')} subtitle={`${todayLabel} · ${t('lastScan', { time: relativeTime(latest.created_at, tTime) })}`} />
 
       <div className="p-4 sm:p-7 space-y-5">
+
+        <WelcomeBanner firstName={firstName} plan={plan} />
 
         {/* Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
