@@ -56,7 +56,7 @@ export default function Footer() {
           <p className="text-white/50 text-sm leading-relaxed mb-8">{t('sub')}</p>
           <div className="space-y-4">
             <a
-              href="mailto:juanserdiuk@juanserdiuk.com"
+              href="mailto:contact@accessly.us"
               className="flex items-center gap-3 text-sm text-white/70 hover:text-white transition group"
             >
               <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-emerald-400/40 transition">
@@ -64,7 +64,7 @@ export default function Footer() {
                   <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
               </span>
-              juanserdiuk@juanserdiuk.com
+              contact@accessly.us
             </a>
             <a
               href="https://www.linkedin.com/company/accessly-web-scanner/"
