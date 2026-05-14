@@ -36,11 +36,17 @@ async function getFounderAvatar(): Promise<string | null> {
 const STATS = [
   { value: '18+',  label: 'Years in accessibility',  sub: 'Front-end + WCAG since 2008' },
   { value: '34%',  label: 'Performance gain',         sub: 'Led ST Math Flash→HTML5 rebuild' },
-  { value: '3',    label: 'Continents',               sub: 'Coordinated teams across SA/NA/Africa' },
+  { value: '3',    label: 'Languages spoken',         sub: 'English · Spanish · Portuguese' },
   { value: 'AAA',  label: 'WCAG depth',                sub: 'Audited to 2.1 AA + AAA standards' },
 ]
 
 const TIMELINE: { year: string; role: string; where: string; note: string }[] = [
+  {
+    year: 'pre-2008',
+    role: 'Studied at',
+    where: 'UC Irvine',
+    note: 'Cut my teeth on the engineering fundamentals at UCI in the late 2000s — Orange County\'s anchor for web technology talent.',
+  },
   {
     year: '2008',
     role: 'First front-end role',
@@ -51,7 +57,7 @@ const TIMELINE: { year: string; role: string; where: string; note: string }[] = 
     year: '2012',
     role: 'Founded a studio',
     where: '99 Trees Media',
-    note: 'Built and led a multidisciplinary team — designers, devs, data — across full project lifecycles.',
+    note: 'Built and led a multidisciplinary team — designers, devs, data — across full project lifecycles. Closed our first million-dollar contract by 2015.',
   },
   {
     year: '2016',
@@ -113,7 +119,7 @@ const VALUES = [
   },
   {
     title: 'Made in Southern California',
-    sub: 'Headquartered in Orange County. Two languages (English + Spanish), one ocean view, zero VC pressure. We answer email from real humans, within hours — not days.',
+    sub: 'Headquartered in Corona, California (Greater LA / OC border). Three languages — English, Spanish, Portuguese — one ocean view, zero VC pressure. We answer email from real humans, within hours, not days.',
     accent: 'cyan',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -154,7 +160,7 @@ export default async function AboutPage() {
               <span className="bg-gradient-to-r from-emerald-600 via-cyan-600 to-violet-600 bg-clip-text text-transparent">audited honestly.</span>
             </h1>
             <p className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Accessly was founded in Orange County by a senior accessibility consultant who spent 18 years filing the same WCAG bug reports — and got tired of charging clients to do work a good scanner can do in seconds.
+              Accessly was founded in Corona, California by a senior accessibility consultant who spent 18 years filing the same WCAG bug reports — and got tired of charging clients to do work a good scanner can do in seconds.
             </p>
           </div>
         </section>
@@ -210,22 +216,27 @@ export default async function AboutPage() {
                 <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Founder & Builder</p>
                 <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 mb-1 leading-tight">Juan Serdiuk</h2>
                 <p className="text-sm text-slate-500 mb-4 leading-relaxed">
-                  Senior accessibility consultant · 18+ years front-end · ex-Level Access · ex-MIND Research Institute · Scrum Master · two languages, one ocean view.
+                  Senior accessibility consultant · 18+ years front-end · UC Irvine · ex-Level Access · ex-MIND Research Institute · trilingual (EN · ES · PT) · Corona, CA.
                 </p>
                 <p className="text-base text-slate-700 leading-relaxed">
                   I started in 2008 making pixel-perfect sites from Photoshop. I&apos;ve since led international teams across three continents, rebuilt a 100M-user education product from Flash to HTML5 (+34% performance), and audited more sites for WCAG 2.1 AA/AAA than I can count.
                   Accessly is what I wanted on day one of every single one of those audits.
                 </p>
                 <div className="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                  <a href="https://www.linkedin.com/company/accessly-web-scanner/" target="_blank" rel="noopener noreferrer"
+                  <a href="https://www.linkedin.com/in/juan-serdiuk-72962b99" target="_blank" rel="noopener noreferrer"
                      className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-900 text-white px-3.5 py-2 rounded-lg hover:bg-slate-700 transition">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                    LinkedIn
+                    Juan on LinkedIn
+                  </a>
+                  <a href="https://www.linkedin.com/company/accessly-web-scanner/" target="_blank" rel="noopener noreferrer"
+                     className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3.5 py-2 rounded-lg hover:bg-slate-50 transition">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                    Accessly on LinkedIn
                   </a>
                   <a href="mailto:contact@accessly.us"
                      className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3.5 py-2 rounded-lg hover:bg-slate-50 transition">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    contact@accessly.us
+                    Email
                   </a>
                 </div>
               </div>
