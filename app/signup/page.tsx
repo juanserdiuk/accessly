@@ -9,6 +9,64 @@ const plans = ['Free','Pro','Agency']
 const prices: Record<string, string> = { Free: '$0/mo', Pro: '$29/mo', Agency: '$99/mo' }
 const planParamMap: Record<string, string> = { pro: 'Pro', agency: 'Agency', free: 'Free' }
 
+// Pretty labels + prices for the pending-purchase banner shown above the
+// signup form when the visitor arrives mid-purchase from /#pricing.
+const PACK_INFO: Record<string, { label: string; price: string; pages: number }> = {
+  starter:       { label: 'Starter Scan Pack',  price: '$9',  pages: 10 },
+  basic:         { label: 'Basic Scan Pack',    price: '$19', pages: 25 },
+  'pro-pack':    { label: 'Pro Scan Pack',      price: '$29', pages: 50 },
+  'agency-pack': { label: 'Agency Scan Pack',   price: '$49', pages: 100 },
+}
+const SUB_INFO: Record<string, { label: string; monthly: number }> = {
+  pro:    { label: 'Pro plan',    monthly: 29 },
+  agency: { label: 'Agency plan', monthly: 99 },
+}
+
+interface ParsedIntent {
+  type: 'pack' | 'subscription'
+  plan: string
+  billing?: 'monthly' | 'annual'
+  code?: string
+  label: string
+  priceLabel: string
+}
+
+function parseIntent(raw: string | null): ParsedIntent | null {
+  if (!raw) return null
+  const parts = raw.split(':')
+  const [type, plan, ...rest] = parts
+  if (type !== 'pack' && type !== 'subscription') return null
+
+  if (type === 'pack') {
+    const info = PACK_INFO[plan]
+    if (!info) return null
+    const code = rest[0]
+    return {
+      type: 'pack',
+      plan,
+      code: code || undefined,
+      label: info.label,
+      priceLabel: `${info.price} · ${info.pages} pages`,
+    }
+  }
+  // subscription
+  const info = SUB_INFO[plan]
+  if (!info) return null
+  const billing = rest[0] === 'annual' ? 'annual' : 'monthly'
+  const code = rest[1]
+  const yearly = Math.round(info.monthly * 12 * 0.8)
+  return {
+    type: 'subscription',
+    plan,
+    billing,
+    code: code || undefined,
+    label: info.label,
+    priceLabel: billing === 'annual'
+      ? `$${yearly} / yr (save 20%)`
+      : `$${info.monthly} / month`,
+  }
+}
+
 function getStrength(pw: string) {
   let s = 0
   if (pw.length >= 8) s++
@@ -26,6 +84,10 @@ function SignupForm() {
   const planParam = (searchParams.get('plan') ?? '').toLowerCase()
   const billingParam = searchParams.get('billing') === 'annual' ? 'annual' : 'monthly'
   const initialPlan = planParamMap[planParam] ?? 'Pro'
+  // Encoded purchase intent from /#pricing (new unified flow). Tells us what
+  // the visitor wanted to buy so we can resume the purchase after they
+  // verify their email and land on the dashboard.
+  const intent = parseIntent(searchParams.get('intent'))
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
   const [plan, setPlan] = useState(initialPlan)
   const [showPass, setShowPass] = useState(false)
@@ -57,21 +119,33 @@ function SignupForm() {
     if (!validate()) return
     setLoading(true)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
-    // If the visitor arrived from Pricing with ?plan=pro/agency, ask the
-    // OAuth callback to resume checkout once they confirm their email.
-    const wantsCheckout = plan === 'Pro' || plan === 'Agency'
-    const slug = plan.toLowerCase()
-    const callbackNext = wantsCheckout
-      ? `/auth/start-checkout?plan=${slug}&billing=${billingParam}`
-      : '/dashboard'
+
+    // After email verification we always drop the user on the dashboard.
+    // If they had a pending purchase intent, it's saved into user_metadata
+    // below and the dashboard will render a "Continue your purchase" banner.
+    const callbackNext = '/dashboard'
     const emailRedirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent(callbackNext)}`
+
+    const pendingIntent = intent
+      ? {
+          type: intent.type,
+          plan: intent.plan,
+          billing: intent.billing,
+          code: intent.code,
+        }
+      : null
 
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
         emailRedirectTo,
-        data: { first_name: form.firstName, last_name: form.lastName, plan },
+        data: {
+          first_name: form.firstName,
+          last_name: form.lastName,
+          plan,
+          ...(pendingIntent ? { pending_intent: pendingIntent } : {}),
+        },
       },
     })
     setLoading(false)
@@ -87,9 +161,8 @@ function SignupForm() {
     }).catch(() => {})
 
     // If the project has email confirmation disabled, signUp returns a
-    // session immediately — go straight to checkout without waiting for the
-    // confirm email round-trip.
-    if (wantsCheckout && data.session) {
+    // session immediately — go straight to the dashboard, banner will fire.
+    if (data.session) {
       window.location.href = callbackNext
       return
     }
@@ -143,6 +216,32 @@ function SignupForm() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-10 bg-slate-50">
         <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-10 shadow-xl">
+          {/* Pending purchase banner — shown when the visitor arrived from /#pricing */}
+          {intent && (
+            <div className="mb-6 -mx-2 px-4 py-3.5 bg-gradient-to-br from-emerald-50 via-emerald-50/70 to-cyan-50 border border-emerald-200/70 rounded-xl">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-lg bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-700">
+                    <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+                  </svg>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-700 mb-0.5">Almost there</p>
+                  <p className="text-sm font-semibold text-slate-900 truncate">{intent.label}</p>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    {intent.priceLabel}
+                    {intent.code && (
+                      <> · code <code className="font-mono text-emerald-700">{intent.code}</code></>
+                    )}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    Create your account first — you&apos;ll be prompted to complete this purchase from your dashboard right after.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <h3 className="font-serif text-2xl text-slate-900 mb-1">{ts('title')}</h3>
           <p className="text-sm text-slate-500 mb-7">
             {ts('haveAccount')} <Link href="/login" className="text-emerald-600 font-medium hover:underline">{ts('signIn')}</Link>

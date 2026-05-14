@@ -3,22 +3,42 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import PromoModal from './PromoModal'
+import { createClient } from '@/lib/supabase/client'
+
+/**
+ * Encode the purchase intent we want to resume after signup as a single
+ * URL-safe param. Format:
+ *   subscription:pro:monthly[:CODE]
+ *   pack:starter[:CODE]
+ */
+function encodeIntent(type: string, plan: string, billing?: string, code?: string | null): string {
+  const parts: string[] = [type, plan]
+  if (type === 'subscription') parts.push(billing ?? 'monthly')
+  if (code) parts.push(code)
+  return parts.join(':')
+}
 
 async function startCheckout(type: string, plan: string, billing?: string, promoCode?: string | null): Promise<string | null> {
+  // ALL paid purchases now require an account. If the visitor isn't signed
+  // in, route them through signup and resume the same purchase after they
+  // verify their email and land on the dashboard.
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    const intent = encodeIntent(type, plan, billing, promoCode)
+    const params = new URLSearchParams({ intent })
+    window.location.href = `/signup?${params}`
+    return null
+  }
+
+  // Signed-in flow — straight to Stripe.
   const res = await fetch('/api/stripe/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type, plan, billing, promoCode: promoCode ?? undefined }),
   })
   const data = await res.json().catch(() => ({}))
-
-  // Subscriptions require auth — send the visitor to signup, then resume
-  // checkout from there once the account is created.
-  if (res.status === 401 && type === 'subscription') {
-    const params = new URLSearchParams({ plan, billing: billing ?? 'monthly' })
-    window.location.href = `/signup?${params}`
-    return null
-  }
 
   if (data.url) {
     window.location.href = data.url

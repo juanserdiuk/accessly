@@ -68,6 +68,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }, { onConflict: 'id' })
   }
 
+  // Clear the pending-purchase intent regardless of type — if the user just
+  // completed the purchase they came here to make, the dashboard banner
+  // should disappear next render.
+  try {
+    const { data: { user: u } } = await supabase.auth.admin.getUserById(userId)
+    const meta = (u?.user_metadata ?? {}) as Record<string, unknown>
+    if (meta.pending_intent != null) {
+      const next = { ...meta }
+      delete next.pending_intent
+      await supabase.auth.admin.updateUserById(userId, { user_metadata: next })
+    }
+  } catch (err) {
+    console.error('[webhook] failed to clear pending_intent:', err)
+  }
+
   // Record promo redemption + commission snapshot if a promo code was used.
   const promoCodeId      = session.metadata?.promo_code_id
   const promoCode        = session.metadata?.promo_code

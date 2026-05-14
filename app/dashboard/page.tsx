@@ -4,6 +4,7 @@ import Topbar from '@/components/dashboard/Topbar'
 import MetricCard from '@/components/dashboard/MetricCard'
 import QuickScan from '@/components/dashboard/QuickScan'
 import WelcomeBanner from '@/components/dashboard/WelcomeBanner'
+import PendingPurchaseBanner, { type PendingIntent } from '@/components/dashboard/PendingPurchaseBanner'
 
 type Scan = {
   id: string
@@ -131,6 +132,21 @@ export default async function DashboardPage() {
   const plan = (profile?.plan ?? 'free') as string
   const firstName = profile?.first_name ?? (user!.user_metadata?.first_name as string | undefined) ?? null
 
+  // Did this visitor arrive mid-purchase from /#pricing and complete signup?
+  // user_metadata.pending_intent was stashed during signup; render a banner
+  // letting them finish their purchase. Cleared on successful checkout by
+  // the Stripe webhook OR by the "Maybe later" dismiss action.
+  const rawIntent = user!.user_metadata?.pending_intent as Partial<PendingIntent> | null | undefined
+  const pendingIntent: PendingIntent | null =
+    rawIntent && typeof rawIntent === 'object' && (rawIntent.type === 'pack' || rawIntent.type === 'subscription') && typeof rawIntent.plan === 'string'
+      ? {
+          type: rawIntent.type,
+          plan: rawIntent.plan,
+          billing: rawIntent.billing === 'annual' ? 'annual' : 'monthly',
+          code: typeof rawIntent.code === 'string' ? rawIntent.code : undefined,
+        }
+      : null
+
   const scans: Scan[] = scansRes.data ?? []
 
   if (scans.length === 0) {
@@ -138,6 +154,7 @@ export default async function DashboardPage() {
       <div className="flex-1 overflow-y-auto">
         <Topbar title={t('title')} />
         <div className="p-4 sm:p-7 space-y-5">
+          {pendingIntent && <PendingPurchaseBanner intent={pendingIntent} />}
           <WelcomeBanner firstName={firstName} plan={plan} />
           <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center">
             <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mb-5">
@@ -180,6 +197,7 @@ export default async function DashboardPage() {
 
       <div className="p-4 sm:p-7 space-y-5">
 
+        {pendingIntent && <PendingPurchaseBanner intent={pendingIntent} />}
         <WelcomeBanner firstName={firstName} plan={plan} />
 
         {/* Metrics */}
