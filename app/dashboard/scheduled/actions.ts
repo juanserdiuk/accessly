@@ -2,26 +2,9 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { CADENCE_MS, isValidCadence } from './cadence'
 
 export type ActionResult = { error?: string; success?: boolean }
-
-type Cadence = 'hourly' | 'every_6h' | 'daily' | 'weekly'
-const CADENCE_LABELS: Record<Cadence, string> = {
-  hourly: 'every hour',
-  every_6h: 'every 6 hours',
-  daily: 'daily',
-  weekly: 'weekly',
-}
-const CADENCE_MS: Record<Cadence, number> = {
-  hourly:   60 * 60 * 1000,
-  every_6h: 6 * 60 * 60 * 1000,
-  daily:    24 * 60 * 60 * 1000,
-  weekly:   7 * 24 * 60 * 60 * 1000,
-}
-
-function isValidCadence(c: string): c is Cadence {
-  return c === 'hourly' || c === 'every_6h' || c === 'daily' || c === 'weekly'
-}
 
 export async function createSchedule(
   _prev: ActionResult | null,
@@ -84,4 +67,3 @@ export async function deleteSchedule(fd: FormData): Promise<void> {
   revalidatePath('/dashboard/scheduled')
 }
 
-export { CADENCE_LABELS, CADENCE_MS }

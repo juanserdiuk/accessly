@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Topbar from '@/components/dashboard/Topbar'
 import CreateScheduleForm from './CreateScheduleForm'
-import { toggleSchedule, deleteSchedule, CADENCE_LABELS } from './actions'
+import { toggleSchedule, deleteSchedule } from './actions'
+import { CADENCE_LABELS } from './cadence'
 
 type Schedule = {
   id: string
