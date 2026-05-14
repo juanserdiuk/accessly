@@ -6,7 +6,8 @@
     "signIn": "Iniciar sesión",
     "startFree": "Empezar gratis",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "about": "Nosotros"
   },
   "hero": {
     "badge": "Verificaciones WCAG 2.2 AA y AAA",
@@ -129,7 +130,8 @@
     "sitemap": "Mapa del sitio",
     "faq": "Preguntas frecuentes",
     "copyright": "© 2026 Accessly. Todos los derechos reservados.",
-    "version": "v{version}"
+    "version": "v{version}",
+    "about": "Nosotros"
   },
   "faq": {
     "label": "Preguntas frecuentes",

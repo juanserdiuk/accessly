@@ -38,6 +38,7 @@ export default function Footer() {
     { label: t('features'), href: '/#features' },
     { label: t('pricing'),  href: '/#pricing'  },
     { label: t('faq'),      href: '/#faq'      },
+    { label: t('about'),    href: '/about'     },
     { label: t('privacy'),  href: '/privacy'   },
     { label: t('terms'),    href: '/terms'      },
     { label: t('sitemap'),  href: '/sitemap' },

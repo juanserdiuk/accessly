@@ -13,6 +13,7 @@ export default function Nav() {
     { label: t('scanner'),  href: '#scanner'  },
     { label: t('features'), href: '#features' },
     { label: t('pricing'),  href: '#pricing'  },
+    { label: t('about'),    href: '/about'    },
     { label: t('signIn'),   href: '/login'    },
   ]
 

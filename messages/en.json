@@ -6,7 +6,8 @@
     "signIn": "Sign in",
     "startFree": "Start free",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "about": "About"
   },
   "hero": {
     "badge": "WCAG 2.2 AA & AAA Compliant Checks",
@@ -129,7 +130,8 @@
     "sitemap": "Sitemap",
     "faq": "FAQ",
     "copyright": "© 2026 Accessly. All rights reserved.",
-    "version": "v{version}"
+    "version": "v{version}",
+    "about": "About"
   },
   "faq": {
     "label": "FAQ",

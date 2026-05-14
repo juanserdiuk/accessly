@@ -40,6 +40,7 @@ const sections: Section[] = [
       { path: '/#features', label: 'Features',      description: 'Everything we check, how reports work, integrations.' },
       { path: '/#pricing',  label: 'Pricing',       description: 'Free, Pro, Agency, and Pay-per-scan plans — full comparison.' },
       { path: '/#faq',      label: 'FAQ',           description: 'Common questions about scans, billing, refunds, and limits.' },
+      { path: '/about',     label: 'About',         description: 'Founder story, 18-year background, SoCal origin, values, timeline.' },
       { path: '/#contact',  label: 'Contact form',  description: 'Footer contact form — answers within a few hours.' },
     ],
   },
