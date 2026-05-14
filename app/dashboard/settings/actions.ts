@@ -94,6 +94,47 @@ export async function updatePassword(
   return { success: true }
 }
 
+/**
+ * Save (or clear) the customer's outbound scan-complete webhook URL.
+ * Stored in user_metadata so we don't need a profiles migration.
+ */
+export async function saveWebhookUrl(rawUrl: string): Promise<{ error?: string; cleared?: boolean }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+
+  const trimmed = rawUrl.trim()
+
+  // Clearing the webhook
+  if (!trimmed) {
+    const current = (user.user_metadata ?? {}) as Record<string, unknown>
+    const next = { ...current }
+    delete next.webhook_url
+    const { error } = await supabase.auth.updateUser({ data: next })
+    if (error) return { error: error.message }
+    revalidatePath('/dashboard/settings')
+    return { cleared: true }
+  }
+
+  // Validate as http(s) URL
+  let parsed: URL
+  try { parsed = new URL(trimmed) } catch { return { error: 'Enter a valid URL (must start with https://)' } }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    return { error: 'Webhook URL must use http or https' }
+  }
+  if (parsed.protocol === 'http:' && !parsed.hostname.match(/^(localhost|127\.|192\.168\.|10\.)/)) {
+    return { error: 'Use https:// for non-local URLs (we won\'t POST secrets over plain HTTP)' }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    data: { webhook_url: parsed.toString() },
+  })
+  if (error) return { error: error.message }
+
+  revalidatePath('/dashboard/settings')
+  return {}
+}
+
 export async function deleteAccount(
   _prev: ActionResult | null,
   fd: FormData,

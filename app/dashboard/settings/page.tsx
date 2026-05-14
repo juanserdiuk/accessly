@@ -5,6 +5,8 @@ import ProfileForm from './ProfileForm'
 import PasswordForm from './PasswordForm'
 import BillingSection from './BillingSection'
 import ApiKeySection from './ApiKeySection'
+import BadgeSection from './BadgeSection'
+import WebhookSection from './WebhookSection'
 import DangerZone from './DangerZone'
 
 function Section({
@@ -56,6 +58,17 @@ export default async function SettingsPage() {
   const apiKey      = process.env.CICD_API_KEY ?? null
   const siteUrl     = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
 
+  // Latest scan id for the badge embed snippets — fall back to a preview if
+  // they haven't scanned anything yet.
+  const { data: latestScan } = await supabase
+    .from('scans')
+    .select('id')
+    .eq('user_id', user!.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const latestScanId = latestScan?.id ?? null
+
   return (
     <div className="dashboard-scroll flex-1 overflow-y-auto">
       <Topbar title={t('title')} />
@@ -83,6 +96,20 @@ export default async function SettingsPage() {
 
         <Section title={t('apiTitle')} description={t('apiDesc')}>
           <ApiKeySection apiKey={apiKey} siteUrl={siteUrl} />
+        </Section>
+
+        <Section
+          title="Webhooks"
+          description="Get notified the moment a scan completes. Useful for Slack alerts, CI/CD pipelines, and custom analytics."
+        >
+          <WebhookSection current={(user!.user_metadata?.webhook_url as string | undefined) ?? null} />
+        </Section>
+
+        <Section
+          title="Compliance badge"
+          description="Embed a live 'Audited by Accessly' badge on your site that links back to your latest scan report. Free top-of-funnel proof for visitors, customers, and procurement teams."
+        >
+          <BadgeSection latestScanId={latestScanId} siteUrl={siteUrl} />
         </Section>
 
         <Section title={t('dangerTitle')} description={t('dangerDesc')} danger>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runScan } from '@/lib/runScan'
 import { createClient } from '@/lib/supabase/server'
+import { sendScanWebhook } from '@/lib/webhooks'
 
 export const maxDuration = 60
 
@@ -72,20 +73,42 @@ export async function POST(req: NextRequest) {
   try {
     const result = await runScan(url)
 
-    // Persist for authenticated users (non-fatal if it fails)
+    // Persist for authenticated users (non-fatal if it fails) + dispatch the
+    // scan-complete webhook if they configured one in /dashboard/settings.
+    let scanId: string | undefined
     try {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const { error } = await supabase.from('scans').insert({
-          user_id: user.id, url,
-          score:      result.score,
-          errors:     result.errors,
-          warnings:   result.warnings,
-          passes:     result.passes,
-          violations: result.violations,
-        })
+        const { data: inserted, error } = await supabase
+          .from('scans')
+          .insert({
+            user_id: user.id, url,
+            score:      result.score,
+            errors:     result.errors,
+            warnings:   result.warnings,
+            passes:     result.passes,
+            violations: result.violations,
+          })
+          .select('id')
+          .single()
         if (error) console.error('[scan] failed to persist:', error.message)
+        if (inserted?.id) scanId = inserted.id
+
+        // Fire-and-forget webhook (5s timeout enforced inside).
+        const webhookUrl = (user.user_metadata as Record<string, unknown> | undefined)?.webhook_url as string | undefined
+        const siteUrl   = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+        sendScanWebhook(webhookUrl ?? null, {
+          event:     'scan.completed',
+          url,
+          score:     result.score,
+          errors:    result.errors,
+          warnings:  result.warnings,
+          passes:    result.passes,
+          scannedAt: new Date().toISOString(),
+          scanId,
+          reportUrl: scanId ? `${siteUrl}/scan/${scanId}` : undefined,
+        }).catch(() => {})
       }
     } catch (err) {
       console.error('[scan] persist threw:', err)

@@ -119,6 +119,7 @@ const sections: Section[] = [
     routes: [
       { path: '/sitemap.xml', label: 'sitemap.xml', description: 'XML sitemap consumed by Google, Bing, and friends.', external: true },
       { path: '/robots.txt',  label: 'robots.txt',  description: 'Crawler rules and pointer to sitemap.xml.', external: true },
+      { path: '/docs/api',    label: 'API & Webhooks docs', description: 'REST API for CI/CD scanning, scan-complete webhook spec, compliance-badge embeds.' },
     ],
   },
 ]
