@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
+import Image from 'next/image'
 
 function fmtMoney(cents: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
@@ -8,6 +9,13 @@ function fmtMoney(cents: number) {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' })
+}
+
+const planMeta: Record<string, { pill: string; dot: string; label: string }> = {
+  free:   { label: 'Free',   pill: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
+  pro:    { label: 'Pro',    pill: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
+  agency: { label: 'Agency', pill: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+  pack:   { label: 'Pack',   pill: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' },
 }
 
 export default async function SalesDashboardPage() {
@@ -33,7 +41,7 @@ export default async function SalesDashboardPage() {
       .order('created_at', { ascending: false }),
     admin
       .from('promo_redemptions')
-      .select('id, customer_email, amount_cents, plan, product_type, commission_cents, payout_status, paid_at, created_at')
+      .select('id, user_id, customer_email, amount_cents, plan, product_type, commission_cents, payout_status, paid_at, created_at')
       .eq('salesperson_id', sp.id)
       .order('created_at', { ascending: false }),
   ])
@@ -50,6 +58,79 @@ export default async function SalesDashboardPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
   const thisMonth = allReds.filter(r => new Date(r.created_at).getTime() >= monthStart)
   const thisMonthCommission = thisMonth.reduce((acc, r) => acc + (r.commission_cents ?? 0), 0)
+
+  // Build customer-level rollup so salespeople can follow up with the people
+  // behind the redemptions, not just the raw transaction rows.
+  type Customer = {
+    userId: string | null
+    email: string
+    firstName: string | null
+    lastName: string | null
+    company: string | null
+    country: string | null
+    city: string | null
+    avatarUrl: string | null
+    plan: string
+    totalSpend: number
+    totalCommission: number
+    purchases: number
+    lastPurchaseAt: string
+  }
+  const customerMap = new Map<string, Customer>()
+  for (const r of allReds) {
+    const key = (r.user_id ?? r.customer_email).toLowerCase()
+    const existing = customerMap.get(key)
+    if (existing) {
+      existing.totalSpend += r.amount_cents ?? 0
+      existing.totalCommission += r.commission_cents ?? 0
+      existing.purchases += 1
+      if (new Date(r.created_at) > new Date(existing.lastPurchaseAt)) {
+        existing.lastPurchaseAt = r.created_at
+        existing.plan = r.plan
+      }
+    } else {
+      customerMap.set(key, {
+        userId: r.user_id ?? null,
+        email: r.customer_email,
+        firstName: null,
+        lastName: null,
+        company: null,
+        country: null,
+        city: null,
+        avatarUrl: null,
+        plan: r.plan,
+        totalSpend: r.amount_cents ?? 0,
+        totalCommission: r.commission_cents ?? 0,
+        purchases: 1,
+        lastPurchaseAt: r.created_at,
+      })
+    }
+  }
+
+  // Hydrate the cards with profile data so salespeople see name, company,
+  // country, photo — the stuff that turns an email into a real follow-up.
+  const userIds = Array.from(customerMap.values()).map(c => c.userId).filter((id): id is string => !!id)
+  if (userIds.length > 0) {
+    const { data: profileRows } = await admin
+      .from('profiles')
+      .select('id, first_name, last_name, company, country, city, avatar_url')
+      .in('id', userIds)
+    for (const p of profileRows ?? []) {
+      for (const c of customerMap.values()) {
+        if (c.userId === p.id) {
+          c.firstName = p.first_name
+          c.lastName  = p.last_name
+          c.company   = p.company
+          c.country   = p.country
+          c.city      = p.city
+          c.avatarUrl = p.avatar_url
+        }
+      }
+    }
+  }
+
+  const customers = Array.from(customerMap.values())
+    .sort((a, b) => b.totalSpend - a.totalSpend)
 
   return (
     <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
@@ -137,6 +218,86 @@ export default async function SalesDashboardPage() {
           </p>
         </div>
       </div>
+
+      {/* My customers — rich cards for follow-up */}
+      {customers.length > 0 && (
+        <div>
+          <div className="flex items-end justify-between mb-3 flex-wrap gap-2">
+            <div>
+              <p className="font-semibold text-slate-900">Your customers</p>
+              <p className="text-xs text-slate-400">{customers.length} customer{customers.length === 1 ? '' : 's'} — top spenders first</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {customers.map(c => {
+              const meta = planMeta[c.plan] ?? planMeta.free
+              const fullName = `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim()
+              const initials = `${(c.firstName?.charAt(0) ?? '')}${(c.lastName?.charAt(0) ?? '')}`.toUpperCase()
+                || c.email.charAt(0).toUpperCase()
+              return (
+                <div
+                  key={c.userId ?? c.email}
+                  className="bg-white border border-slate-200 rounded-2xl p-5 hover:shadow-md hover:border-slate-300 transition"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 shrink-0 ring-2 ring-white">
+                      {c.avatarUrl ? (
+                        <Image src={c.avatarUrl} alt={fullName || c.email} fill className="object-cover" sizes="48px" unoptimized />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm">
+                          {initials}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <p className="font-semibold text-slate-900 truncate">
+                          {fullName || <span className="text-slate-400 italic font-normal">No name yet</span>}
+                        </p>
+                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full border ${meta.pill}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                          {meta.label}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{c.email}</p>
+                      {(c.company || c.country) && (
+                        <p className="text-xs text-slate-400 mt-1 truncate">
+                          {[c.company, c.city, c.country].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Spent</p>
+                      <p className="font-semibold text-sm text-slate-800 mt-0.5">{fmtMoney(c.totalSpend)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Earned</p>
+                      <p className="font-semibold text-sm text-emerald-600 mt-0.5">{fmtMoney(c.totalCommission)}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Last buy</p>
+                      <p className="font-semibold text-sm text-slate-800 mt-0.5">{fmtDate(c.lastPurchaseAt)}</p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`mailto:${c.email}`}
+                    className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-700 transition"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                    Follow up
+                  </a>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Activity */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">

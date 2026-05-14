@@ -1,4 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
+import { setOwnPlan } from './actions'
 
 function relativeTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime()
@@ -35,6 +37,15 @@ function flag(country: string | null) {
 
 export default async function AdminPage() {
   const supabase = createAdminClient()
+
+  // Pull the admin's own plan so the test-bypass panel can highlight the
+  // currently-active tier.
+  const userClient = await createClient()
+  const { data: { user: adminUser } } = await userClient.auth.getUser()
+  const { data: ownProfile } = adminUser
+    ? await supabase.from('profiles').select('plan').eq('id', adminUser.id).single()
+    : { data: null }
+  const ownPlan = (ownProfile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
 
   const [
     totalScansRes,
@@ -171,6 +182,52 @@ export default async function AdminPage() {
       <div>
         <h1 className="font-serif text-2xl text-slate-900">Overview</h1>
         <p className="text-sm text-slate-400 mt-0.5">Real-time stats across all users and scans.</p>
+      </div>
+
+      {/* Admin test bypass — flip own plan without going through Stripe */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-5 sm:p-6 relative overflow-hidden">
+        <div aria-hidden="true" className="pointer-events-none absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-widest bg-amber-400/20 border border-amber-400/30 text-amber-200 px-2 py-0.5 rounded-full">
+                Dev bypass
+              </span>
+              <span className="text-[10px] uppercase tracking-wide text-white/40">Stripe-free</span>
+            </div>
+            <p className="font-semibold text-base">Switch your own plan for testing</p>
+            <p className="text-xs text-white/60 mt-0.5">
+              Currently on <span className="font-semibold text-white capitalize">{ownPlan}</span> — flip without paying to spot-check gated UI.
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0 flex-wrap">
+            {(['free', 'pro', 'agency'] as const).map(p => {
+              const active = ownPlan === p
+              return (
+                <form key={p} action={setOwnPlan}>
+                  <input type="hidden" name="plan" value={p} />
+                  <button
+                    type="submit"
+                    disabled={active}
+                    className={`px-4 py-2 text-xs font-bold rounded-lg transition capitalize ${
+                      active
+                        ? 'bg-white text-slate-900 cursor-default'
+                        : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </form>
+              )
+            })}
+            <a
+              href="/dashboard"
+              className="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-500 text-slate-900 hover:bg-emerald-400 transition"
+            >
+              Open dashboard →
+            </a>
+          </div>
+        </div>
       </div>
 
       {/* Stats grid */}
