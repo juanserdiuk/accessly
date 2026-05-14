@@ -74,6 +74,21 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={`${inter.variable} ${bricolage.variable}`}>
       <body suppressHydrationWarning>
+        {/* Skip-to-content link — invisible until focused via keyboard. Critical
+            a11y feature for keyboard-only users and screen-reader users so they
+            don't have to tab through the entire site header on every page. */}
+        <a
+          href="#main-content"
+          className="
+            sr-only focus:not-sr-only
+            focus:fixed focus:top-3 focus:left-3 focus:z-[100]
+            focus:bg-slate-900 focus:text-white focus:font-semibold focus:text-sm
+            focus:px-4 focus:py-2.5 focus:rounded-lg focus:shadow-2xl
+            focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2
+          "
+        >
+          Skip to main content
+        </a>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

@@ -66,7 +66,7 @@ export default async function Hero() {
         <div className="flex flex-wrap justify-center gap-3 animate-[heroFadeUp_900ms_cubic-bezier(0.22,1,0.36,1)_480ms_both]">
           {pills.map(pill => (
             <span key={pill} className="inline-flex items-center gap-2 bg-white/8 border border-white/15 text-white/70 text-sm px-4 py-2 rounded-full backdrop-blur-sm">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400 shrink-0">
+              <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400 shrink-0">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               {pill}

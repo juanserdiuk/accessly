@@ -34,8 +34,8 @@ export default function Nav() {
     <>
       <nav className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/60' : 'bg-white border-b border-slate-200'}`}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-serif text-xl text-slate-900" onClick={() => setOpen(false)}>
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
+          <Link href="/" className="flex items-center gap-2 font-serif text-xl text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 rounded-lg" onClick={() => setOpen(false)} aria-label="Accessly home">
+            <div aria-hidden="true" className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center">
               <span className="text-emerald-400 text-sm font-bold">A</span>
             </div>
             Accessly
@@ -58,11 +58,13 @@ export default function Nav() {
             <button
               onClick={() => setOpen(o => !o)}
               aria-label={open ? t('closeMenu') : t('openMenu')}
-              className="flex flex-col gap-1.5 w-8 h-8 items-center justify-center"
+              aria-expanded={open}
+              type="button"
+              className="flex flex-col gap-1.5 w-11 h-11 items-center justify-center rounded-lg hover:bg-slate-100 active:bg-slate-200 transition-colors -mr-2"
             >
-              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
-              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 ${open ? 'w-0 opacity-0' : 'w-5'}`} />
-              <span className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
+              <span aria-hidden="true" className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 rotate-45 translate-y-2' : 'w-5'}`} />
+              <span aria-hidden="true" className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 ${open ? 'w-0 opacity-0' : 'w-5'}`} />
+              <span aria-hidden="true" className={`block h-0.5 bg-slate-800 rounded-full transition-all duration-300 origin-center ${open ? 'w-5 -rotate-45 -translate-y-2' : 'w-5'}`} />
             </button>
           </div>
         </div>

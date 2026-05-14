@@ -143,7 +143,7 @@ export default async function AboutPage() {
     <>
       <Nav />
 
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+      <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
 
         {/* Hero */}
         <section className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-12 text-center">

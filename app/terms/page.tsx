@@ -32,8 +32,9 @@ function Ul({ items }: { items: string[] }) {
 
 export default function TermsPage() {
   return (
-    <main>
+    <>
       <Nav />
+      <main id="main-content">
 
       {/* Hero */}
       <div className="bg-slate-900 px-6 py-20 text-center relative overflow-hidden">
@@ -311,7 +312,8 @@ export default function TermsPage() {
         </div>
       </div>
 
+      </main>
       <Footer />
-    </main>
+    </>
   )
 }

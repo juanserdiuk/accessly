@@ -163,19 +163,22 @@ export default function Pricing() {
         <div className="flex items-center justify-center gap-3 mb-10">
           <span className="text-sm font-medium text-slate-500 leading-none">{t('monthly')}</span>
           <button
+            type="button"
             onClick={() => setAnnual(!annual)}
-            aria-label="Toggle annual billing"
-            className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${annual ? 'bg-emerald-400' : 'bg-slate-200'}`}
+            role="switch"
+            aria-checked={annual}
+            aria-label="Bill annually (save 20%)"
+            className={`relative w-12 h-6 rounded-full transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 ${annual ? 'bg-emerald-400' : 'bg-slate-200'}`}
           >
-            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${annual ? 'translate-x-6' : 'translate-x-0'}`} />
+            <span aria-hidden="true" className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${annual ? 'translate-x-6' : 'translate-x-0'}`} />
           </button>
           <span className="text-sm font-medium text-slate-500 leading-none">{t('annual')}</span>
           <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full leading-none">{t('save20')}</span>
         </div>
 
         {error && (
-          <div className="max-w-md mx-auto mb-6 flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
+          <div role="alert" className="max-w-md mx-auto mb-6 flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
             {error}

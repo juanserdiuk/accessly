@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
         <!-- Footer -->
         <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;padding:20px 36px;text-align:center">
           <p style="margin:0;font-size:12px;color:#94a3b8">
-            Sent via <a href="https://accessly.io" style="color:#64748b;text-decoration:none;font-weight:500">Accessly</a> contact form
+            Sent via <a href="https://accessly.us" style="color:#64748b;text-decoration:none;font-weight:500">Accessly</a> contact form
           </p>
         </td></tr>
 

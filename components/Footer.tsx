@@ -60,7 +60,7 @@ export default function Footer() {
               href="mailto:contact@accessly.us"
               className="flex items-center gap-3 text-sm text-white/70 hover:text-white transition group"
             >
-              <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-emerald-400/40 transition">
+              <span aria-hidden="true" className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-emerald-400/40 transition">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
@@ -73,7 +73,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="flex items-center gap-3 text-sm text-white/70 hover:text-white transition group"
             >
-              <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-emerald-400/40 transition">
+              <span aria-hidden="true" className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center group-hover:border-emerald-400/40 transition">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
                 </svg>
@@ -81,7 +81,7 @@ export default function Footer() {
               LinkedIn
             </a>
             <div className="flex items-center gap-3 text-sm text-white/40">
-              <span className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
+              <span aria-hidden="true" className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
@@ -162,8 +162,8 @@ export default function Footer() {
 
       {/* Bottom bar */}
       <div className="max-w-6xl mx-auto px-6 py-8 flex flex-wrap items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 font-serif text-lg text-white">
-          <div className="w-7 h-7 bg-emerald-400 rounded-lg flex items-center justify-center">
+        <Link href="/" className="flex items-center gap-2 font-serif text-lg text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 rounded-lg" aria-label="Accessly home">
+          <div aria-hidden="true" className="w-7 h-7 bg-emerald-400 rounded-lg flex items-center justify-center">
             <span className="text-slate-900 text-xs font-bold">A</span>
           </div>
           Accessly

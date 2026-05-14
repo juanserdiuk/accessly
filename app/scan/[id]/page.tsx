@@ -97,7 +97,7 @@ export default async function PublicScanReportPage({
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-10 space-y-5">
+      <main id="main-content" className="max-w-4xl mx-auto px-6 py-10 space-y-5">
         {/* Report header */}
         <div className="bg-white border border-slate-200 rounded-2xl px-6 py-5">
           <div className="flex items-start justify-between gap-4 flex-wrap">

@@ -86,11 +86,12 @@ export default function PromoModal({ open, onClose, onContinue }: Props) {
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <h2 id="promo-modal-title" className="font-serif text-xl text-slate-900">Have a promo code?</h2>
           <button
+            type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="w-8 h-8 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+            aria-label="Close promo code modal"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition -mr-2"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
@@ -101,28 +102,34 @@ export default function PromoModal({ open, onClose, onContinue }: Props) {
             Enter your code below to apply your discount. Skip this step to continue with the regular price.
           </p>
 
+          <label htmlFor="promo-code-input" className="sr-only">Promo code</label>
           <div className="flex gap-2 mb-3">
             <input
+              id="promo-code-input"
               type="text"
               value={code}
               onChange={e => { setCode(e.target.value.toUpperCase()); setState({ phase: 'idle' }) }}
               onKeyDown={e => e.key === 'Enter' && validate()}
               placeholder="e.g. SUMMER10"
               autoFocus
-              className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-emerald-400 transition uppercase placeholder:normal-case placeholder:text-slate-300"
+              autoComplete="off"
+              aria-describedby={state.phase === 'invalid' ? 'promo-code-error' : undefined}
+              aria-invalid={state.phase === 'invalid' || undefined}
+              className="flex-1 px-4 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition uppercase placeholder:normal-case placeholder:text-slate-300"
             />
             <button
+              type="button"
               onClick={validate}
               disabled={state.phase === 'checking' || !code.trim()}
-              className="px-4 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition disabled:opacity-50"
+              className="px-4 min-h-[44px] bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-700 transition disabled:opacity-50"
             >
               {state.phase === 'checking' ? 'Checking…' : 'Apply'}
             </button>
           </div>
 
           {state.phase === 'valid' && (
-            <div className="flex items-start gap-2.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-4">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 shrink-0 mt-0.5">
+            <div role="status" aria-live="polite" className="flex items-start gap-2.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-4">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 shrink-0 mt-0.5">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               <div>
@@ -131,8 +138,8 @@ export default function PromoModal({ open, onClose, onContinue }: Props) {
             </div>
           )}
           {state.phase === 'invalid' && (
-            <div className="flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
+            <div id="promo-code-error" role="alert" className="flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
               {state.error}

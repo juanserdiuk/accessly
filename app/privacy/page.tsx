@@ -32,8 +32,9 @@ function Ul({ items }: { items: string[] }) {
 
 export default function PrivacyPage() {
   return (
-    <main>
+    <>
       <Nav />
+      <main id="main-content">
 
       {/* Hero */}
       <div className="bg-slate-900 px-6 py-20 text-center relative overflow-hidden">
@@ -52,7 +53,7 @@ export default function PrivacyPage() {
           {/* Intro */}
           <p className="text-slate-600 leading-7 mb-12">
             Accessly (&ldquo;we&rdquo;, &ldquo;us&rdquo;, or &ldquo;our&rdquo;) operates the Accessly web accessibility scanning
-            platform at accessly.io. This Privacy Policy explains what information we collect, how we use
+            platform at accessly.us. This Privacy Policy explains what information we collect, how we use
             it, and what rights you have in relation to it. By using Accessly you agree to the practices
             described below. If you do not agree, please do not use the service.
           </p>
@@ -254,7 +255,8 @@ export default function PrivacyPage() {
         </div>
       </div>
 
+      </main>
       <Footer />
-    </main>
+    </>
   )
 }

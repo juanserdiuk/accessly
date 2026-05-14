@@ -28,7 +28,7 @@ export default async function UpgradePage() {
   const firstName = profile?.first_name ?? null
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+    <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
 
       {/* Top bar with back link */}
       <header className="border-b border-slate-200/60 bg-white/70 backdrop-blur sticky top-0 z-20">
