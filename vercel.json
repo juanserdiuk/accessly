@@ -2,8 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "// note": "Hobby plan caps cron interval at once-per-day. Bump to '0 * * * *' (hourly) when on Pro to make the hourly/6h cadences in the dashboard actually fire that often.",
       "path": "/api/cron/scheduled-scans",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
