@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isAdminEmail } from '@/lib/auth/admin'
 import Link from 'next/link'
 import AdminNav from './AdminNav'
 
@@ -8,10 +9,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login')
-
-  const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL)?.trim().toLowerCase()
-  const userEmail = user.email?.trim().toLowerCase()
-  if (!adminEmail || !userEmail || adminEmail !== userEmail) redirect('/dashboard')
+  if (!isAdminEmail(user.email)) redirect('/dashboard')
 
   return (
     <div className="min-h-screen bg-slate-50">

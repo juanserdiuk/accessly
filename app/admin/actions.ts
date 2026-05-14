@@ -2,6 +2,7 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
+import { isAdminEmail } from '@/lib/auth/admin'
 import { revalidatePath } from 'next/cache'
 
 export type ActionResult = { error?: string; success?: boolean }
@@ -9,8 +10,7 @@ export type ActionResult = { error?: string; success?: boolean }
 async function requireAdminUser() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL)?.trim().toLowerCase()
-  if (!user?.email || !adminEmail || user.email.trim().toLowerCase() !== adminEmail) return null
+  if (!isAdminEmail(user?.email)) return null
   return user
 }
 
