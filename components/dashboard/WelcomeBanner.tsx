@@ -17,6 +17,12 @@ const PLAN_COPY: Record<string, { title: string; sub: string; gradient: string; 
     gradient: 'from-slate-900 via-slate-800 to-slate-900',
     badge: 'Free plan',
   },
+  pps: {
+    title: 'Pay-as-you-scan, {name}',
+    sub: 'No subscription — just pay for the scans you need. Portfolios, white-label reports, salesperson tracking are unlocked. Top up anytime.',
+    gradient: 'from-blue-700 via-blue-600 to-cyan-600',
+    badge: 'Pay per scan',
+  },
   pro: {
     title: 'Welcome to Pro, {name}!',
     sub: 'Unlimited scans, scheduled monitoring, regression alerts, and the full WCAG 2.2 reports are all unlocked.',
@@ -67,6 +73,17 @@ export default function WelcomeBanner({ firstName, plan }: Props) {
             className="shrink-0 inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-4 py-2.5 rounded-xl hover:bg-white/90 transition text-sm shadow-lg"
           >
             Upgrade
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </Link>
+        )}
+        {plan === 'pps' && (
+          <Link
+            href="/upgrade"
+            className="shrink-0 inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-4 py-2.5 rounded-xl hover:bg-white/90 transition text-sm shadow-lg"
+          >
+            Buy more scans
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
             </svg>

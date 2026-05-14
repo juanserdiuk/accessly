@@ -46,14 +46,22 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const credits = PACK_CREDITS[plan] ?? 0
     const { data: profile } = await supabase
       .from('profiles')
-      .select('scan_count')
+      .select('scan_count, plan')
       .eq('id', userId)
       .single()
+
+    // Anyone on `free` who buys a scan pack gets promoted to `pps`
+    // (Pay-per-scan): full agency-like UI minus monitoring, with the
+    // ability to keep topping up via more packs.  Existing pro/agency
+    // subscribers keep their plan — pack credits just add on top.
+    const currentPlan = profile?.plan ?? 'free'
+    const nextPlan = currentPlan === 'free' ? 'pps' : currentPlan
 
     await supabase
       .from('profiles')
       .upsert({
         id: userId,
+        plan: nextPlan,
         stripe_customer_id: session.customer as string,
         scan_count: (profile?.scan_count ?? 0) + credits,
         updated_at: new Date().toISOString(),
@@ -133,7 +141,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, scan_count')
     .eq('stripe_customer_id', customerId)
     .single()
 
@@ -142,9 +150,14 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return
   }
 
+  // If the canceller still has scan credits sitting in their account from
+  // prior pack purchases, demote them to `pps` (they still get to use those
+  // scans + the pps feature set). Otherwise back to `free`.
+  const nextPlan = (profile.scan_count ?? 0) > 0 ? 'pps' : 'free'
+
   await supabase
     .from('profiles')
-    .update({ plan: 'free', updated_at: new Date().toISOString() })
+    .update({ plan: nextPlan, updated_at: new Date().toISOString() })
     .eq('id', profile.id)
 }
 

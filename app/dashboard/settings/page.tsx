@@ -51,7 +51,7 @@ export default async function SettingsPage() {
   const country   = profile?.country ?? ''
   const avatarUrl = profile?.avatar_url ?? null
   const email     = user!.email ?? ''
-  const plan        = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
+  const plan        = (profile?.plan ?? 'free') as 'free' | 'pps' | 'pro' | 'agency'
   const hasCustomer = !!profile?.stripe_customer_id
   const apiKey      = process.env.CICD_API_KEY ?? null
   const siteUrl     = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')

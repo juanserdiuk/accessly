@@ -45,20 +45,23 @@ export default async function AdminPage() {
   const { data: ownProfile } = adminUser
     ? await supabase.from('profiles').select('plan').eq('id', adminUser.id).single()
     : { data: null }
-  const ownPlan = (ownProfile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
+  const ownPlan = (ownProfile?.plan ?? 'free') as 'free' | 'pps' | 'pro' | 'agency'
 
   const [
     totalScansRes,
     proCountRes,
     agencyCountRes,
+    ppsCountRes,
     scansThisMonthRes,
     recentScansRes,
     allProfilesRes,
     usersRes,
+    ppsScanCreditsRes,
   ] = await Promise.all([
     supabase.from('scans').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pro'),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'agency'),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('plan', 'pps'),
     supabase.from('scans').select('*', { count: 'exact', head: true })
       .gte('created_at', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()),
     supabase.from('scans')
@@ -66,8 +69,10 @@ export default async function AdminPage() {
       .order('created_at', { ascending: false })
       .limit(10),
     // Pull stripe_customer_id + geo so admin can see who's paying and where.
-    supabase.from('profiles').select('id, plan, stripe_customer_id, country, city'),
+    supabase.from('profiles').select('id, plan, stripe_customer_id, country, city, scan_count'),
     supabase.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    // Total scan credits sitting in PPS accounts — what we owe customers.
+    supabase.from('profiles').select('scan_count').eq('plan', 'pps'),
   ])
 
   const allUsers = usersRes.data?.users ?? []
@@ -75,15 +80,21 @@ export default async function AdminPage() {
   const totalScans = totalScansRes.count ?? 0
   const proCount = proCountRes.count ?? 0
   const agencyCount = agencyCountRes.count ?? 0
+  const ppsCount = ppsCountRes.count ?? 0
   const subCount = proCount + agencyCount
   const mrr = proCount * 29 + agencyCount * 99
   const scansThisMonth = scansThisMonthRes.count ?? 0
+  const ppsScanCreditsTotal = (ppsScanCreditsRes.data ?? []).reduce(
+    (acc, p) => acc + (p.scan_count ?? 0),
+    0,
+  )
 
   // Anyone with a Stripe customer id has paid us at least once — subscriber
   // OR one-time pack buyer. That's the right denominator for conversion.
   const profiles = allProfilesRes.data ?? []
   const paidCount = profiles.filter(p => !!p.stripe_customer_id).length
-  const packOnlyCount = Math.max(0, paidCount - subCount)
+  // Subscribers are pro/agency. PPS is a paid, non-subscription bucket.
+  const packOnlyCount = Math.max(0, paidCount - subCount - ppsCount)
 
   // Build lookup maps
   const planMap: Record<string, string> = Object.fromEntries(
@@ -165,13 +176,29 @@ export default async function AdminPage() {
     {
       label: 'Conversion rate',
       value: `${conversionRate}%`,
-      sub: `${paidCount} paying (${subCount} sub · ${packOnlyCount} pack)`,
+      sub: `${paidCount} paying (${subCount} sub · ${ppsCount} pps · ${packOnlyCount} pack)`,
       color: 'text-violet-600',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-500">
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
         </svg>
       ),
+    },
+  ]
+
+  // Dedicated PPS stat block — what we owe customers in unspent scan credits.
+  const ppsStats = [
+    {
+      label: 'PPS accounts',
+      value: ppsCount.toLocaleString(),
+      sub: ppsCount === 0 ? 'No pay-per-scan customers yet' : `${ppsCount} active`,
+      color: 'text-blue-600',
+    },
+    {
+      label: 'Outstanding scan credits',
+      value: ppsScanCreditsTotal.toLocaleString(),
+      sub: 'Pre-paid scans across all PPS accounts',
+      color: 'text-cyan-600',
     },
   ]
 
@@ -201,8 +228,9 @@ export default async function AdminPage() {
             </p>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
-            {(['free', 'pro', 'agency'] as const).map(p => {
+            {(['free', 'pps', 'pro', 'agency'] as const).map(p => {
               const active = ownPlan === p
+              const label = p === 'pps' ? 'PPS' : p
               return (
                 <form key={p} action={setOwnPlan}>
                   <input type="hidden" name="plan" value={p} />
@@ -215,7 +243,7 @@ export default async function AdminPage() {
                         : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                     }`}
                   >
-                    {p}
+                    {label}
                   </button>
                 </form>
               )
@@ -244,6 +272,43 @@ export default async function AdminPage() {
         ))}
       </div>
 
+      {/* PPS-specific stats — surfaced separately because they answer a
+          different question from the main MRR-flavoured grid above:
+          how many one-time-pack-funded accounts are sitting on prepaid
+          credit that we still owe them. */}
+      <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50/50 border border-blue-100 rounded-2xl p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+            Pay per scan
+          </span>
+          <p className="text-xs text-slate-500">Customers buying packs instead of subscribing.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {ppsStats.map((s) => (
+            <div key={s.label}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">{s.label}</p>
+              <p className={`font-serif text-3xl ${s.color} mb-0.5`}>{s.value}</p>
+              <p className="text-xs text-slate-400">{s.sub}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-blue-100/60 flex items-center justify-between">
+          <p className="text-xs text-slate-500">
+            See every PPS customer with their remaining credits on the Customers tab.
+          </p>
+          <a
+            href="/admin/customers?plan=pps"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 hover:text-blue-900 transition"
+          >
+            View PPS customers
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
       {/* Top countries */}
       {topCountries.length > 0 && (
         <div className="bg-white border border-slate-200 rounded-2xl p-5">
@@ -268,6 +333,7 @@ export default async function AdminPage() {
         <div className="flex items-center gap-3 mb-3">
           {[
             { label: 'Free', count: totalUsers - paidCount, color: 'bg-slate-200' },
+            { label: 'PPS', count: ppsCount, color: 'bg-blue-400' },
             { label: 'Pro', count: proCount, color: 'bg-violet-400' },
             { label: 'Agency', count: agencyCount, color: 'bg-amber-400' },
           ].map(({ label, count, color }) => (

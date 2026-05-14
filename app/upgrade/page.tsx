@@ -23,7 +23,7 @@ export default async function UpgradePage() {
     .eq('id', user.id)
     .single()
 
-  const plan = (profile?.plan ?? 'free') as 'free' | 'pro' | 'agency'
+  const plan = (profile?.plan ?? 'free') as 'free' | 'pps' | 'pro' | 'agency'
   const hasStripeCustomer = !!profile?.stripe_customer_id
   const firstName = profile?.first_name ?? null
 
@@ -57,7 +57,10 @@ export default async function UpgradePage() {
           <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 mb-6 shadow-sm">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs font-semibold text-slate-700">
-              {plan === 'free' ? 'You\'re on the Free plan' : `You're on the ${plan === 'pro' ? 'Pro' : 'Agency'} plan`}
+              {plan === 'free' && 'You\'re on the Free plan'}
+              {plan === 'pps' && 'You\'re on Pay-per-scan'}
+              {plan === 'pro' && 'You\'re on the Pro plan'}
+              {plan === 'agency' && 'You\'re on the Agency plan'}
             </span>
           </div>
           <h1 className="font-serif text-4xl sm:text-6xl text-slate-900 mb-4 leading-[1.05] tracking-tight">

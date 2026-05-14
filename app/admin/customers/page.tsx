@@ -26,9 +26,10 @@ function fmtMoney(cents: number) {
 }
 
 const planMeta: Record<string, { label: string; pill: string; dot: string }> = {
-  free:   { label: 'Free',   pill: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
-  pro:    { label: 'Pro',    pill: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
-  agency: { label: 'Agency', pill: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' },
+  free:   { label: 'Free',         pill: 'bg-slate-100 text-slate-600 border-slate-200', dot: 'bg-slate-400' },
+  pps:    { label: 'Pay per scan', pill: 'bg-blue-50 text-blue-700 border-blue-200',     dot: 'bg-blue-500' },
+  pro:    { label: 'Pro',          pill: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-500' },
+  agency: { label: 'Agency',       pill: 'bg-amber-50 text-amber-700 border-amber-200',  dot: 'bg-amber-500' },
 }
 
 interface PageProps {
@@ -96,6 +97,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
         stripeCustomerId: p.stripe_customer_id ?? null,
         signupAt: signupMap[p.id] ?? p.created_at,
         scanCount: scanCountMap[p.id] ?? 0,
+        scanCredits: p.scan_count ?? 0,
         lastScanAt: lastScanMap[p.id] ?? null,
         spend: spendMap[p.id] ?? 0,
       }
@@ -159,6 +161,7 @@ export default async function CustomersPage({ searchParams }: PageProps) {
           >
             <option value="">All plans</option>
             <option value="free">Free</option>
+            <option value="pps">Pay per scan</option>
             <option value="pro">Pro</option>
             <option value="agency">Agency</option>
           </select>
@@ -266,6 +269,25 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                   </div>
                 </div>
 
+                {/* PPS-specific: remaining scan credits banner */}
+                {c.plan === 'pps' && (
+                  <div className="mt-3 flex items-center justify-between gap-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 shrink-0">
+                        <rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                      </svg>
+                      <p className="text-xs text-blue-900 truncate">
+                        <span className="font-semibold">{c.scanCredits}</span> scan credit{c.scanCredits === 1 ? '' : 's'} remaining
+                      </p>
+                    </div>
+                    {c.scanCredits === 0 && (
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full shrink-0">
+                        Empty
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {/* Actions */}
                 <div className="flex gap-2 mt-4">
                   <a
@@ -301,12 +323,13 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                       Admin
                     </span>
                   </div>
-                  <div className="flex gap-1.5">
-                    {(['free', 'pro', 'agency'] as const).map(p => {
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {(['free', 'pps', 'pro', 'agency'] as const).map(p => {
                       const active = c.plan === p
                       const targetMeta = planMeta[p]
+                      const buttonLabel = p === 'pps' ? 'PPS' : p
                       return (
-                        <form key={p} action={setCustomerPlan} className="flex-1">
+                        <form key={p} action={setCustomerPlan}>
                           <input type="hidden" name="userId" value={c.id} />
                           <input type="hidden" name="plan" value={p} />
                           <button
@@ -317,9 +340,9 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                                 ? `${targetMeta.pill} cursor-default border`
                                 : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
                             }`}
-                            title={active ? `Currently on ${p}` : `Grant ${p} (free, bypasses Stripe)`}
+                            title={active ? `Currently on ${targetMeta.label}` : `Grant ${targetMeta.label} (free, bypasses Stripe)`}
                           >
-                            {p}
+                            {buttonLabel}
                           </button>
                         </form>
                       )

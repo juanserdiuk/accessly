@@ -24,7 +24,7 @@ export async function setOwnPlan(fd: FormData): Promise<void> {
   if (!user) return
 
   const plan = (fd.get('plan') as string ?? '').trim()
-  if (!['free', 'pro', 'agency'].includes(plan)) return
+  if (!['free', 'pps', 'pro', 'agency'].includes(plan)) return
 
   const admin = createAdminClient()
   await admin.from('profiles').update({ plan }).eq('id', user.id)
@@ -52,7 +52,7 @@ export async function setCustomerPlan(fd: FormData): Promise<void> {
   const plan   = (fd.get('plan')   as string ?? '').trim()
 
   if (!userId) return
-  if (!['free', 'pro', 'agency'].includes(plan)) return
+  if (!['free', 'pps', 'pro', 'agency'].includes(plan)) return
 
   const admin = createAdminClient()
   await admin.from('profiles').update({ plan }).eq('id', userId)

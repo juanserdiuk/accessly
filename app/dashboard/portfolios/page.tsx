@@ -30,7 +30,7 @@ export default async function PortfoliosPage() {
     .eq('id', user!.id)
     .single()
   const plan = (profile?.plan ?? 'free') as string
-  const hasAccess = plan === 'pro' || plan === 'agency'
+  const hasAccess = plan === 'pro' || plan === 'agency' || plan === 'pps'
 
   if (!hasAccess) {
     return (

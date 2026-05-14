@@ -64,9 +64,16 @@ const PLANS: Plan[] = [
 ]
 
 interface Props {
-  currentPlan: 'free' | 'pro' | 'agency'
+  currentPlan: 'free' | 'pps' | 'pro' | 'agency'
   hasStripeCustomer: boolean
 }
+
+const SCAN_PACKS = [
+  { slug: 'starter',     pages: 10,  price: 9,  perPage: '0.90' },
+  { slug: 'basic',       pages: 25,  price: 19, perPage: '0.76' },
+  { slug: 'pro-pack',    pages: 50,  price: 29, perPage: '0.58', featured: true },
+  { slug: 'agency-pack', pages: 100, price: 49, perPage: '0.49' },
+] as const
 
 export default function UpgradePlans({ currentPlan, hasStripeCustomer }: Props) {
   const [annual, setAnnual] = useState(false)
@@ -87,6 +94,28 @@ export default function UpgradePlans({ currentPlan, hasStripeCustomer }: Props) 
           plan: slug,
           billing: annual ? 'annual' : 'monthly',
         }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      setError(data.error ?? `Checkout failed (${res.status})`)
+    } catch {
+      setError('Network error — please retry.')
+    } finally {
+      setLoadingKey(null)
+    }
+  }
+
+  async function buyPack(slug: string) {
+    setError(null)
+    setLoadingKey(`pack-${slug}`)
+    try {
+      const res = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'pack', plan: slug }),
       })
       const data = await res.json().catch(() => ({}))
       if (data.url) {
@@ -166,7 +195,8 @@ export default function UpgradePlans({ currentPlan, hasStripeCustomer }: Props) 
           const isCurrent = currentPlan === plan.slug
           const isDowngrade =
             (currentPlan === 'agency' && plan.slug !== 'agency') ||
-            (currentPlan === 'pro' && plan.slug === 'free')
+            (currentPlan === 'pro' && plan.slug === 'free') ||
+            (currentPlan === 'pps' && plan.slug === 'free')
           const loading = loadingKey === plan.slug
           const price = annual ? annualTotal(plan.monthly) : plan.monthly
           const period = annual ? 'per year' : 'per month'
@@ -295,6 +325,84 @@ export default function UpgradePlans({ currentPlan, hasStripeCustomer }: Props) 
             </div>
           )
         })}
+      </div>
+
+      {/* OR pay per scan — alternative path for customers who don't want a subscription */}
+      <div className="pt-6">
+        <div className="relative flex items-center gap-4 mb-8">
+          <div className="flex-1 h-px bg-slate-200" />
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+            Or pay only when you need it
+          </p>
+          <div className="flex-1 h-px bg-slate-200" />
+        </div>
+
+        <div className="bg-gradient-to-br from-blue-50 via-white to-cyan-50/50 border border-blue-100 rounded-3xl p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+            <div className="min-w-0">
+              <div className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mb-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                Pay per scan
+              </div>
+              <h3 className="font-serif text-2xl text-slate-900 mb-1">
+                Buy scan packs — no subscription
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed max-w-xl">
+                One-time purchase. Credits never expire. You unlock portfolios, white-label reports, and salesperson tracking — everything except scheduled monitoring.
+                {currentPlan === 'pps' && ' Top up below.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {SCAN_PACKS.map((pack) => {
+              const key = `pack-${pack.slug}`
+              const loading = loadingKey === key
+              const featured = 'featured' in pack && pack.featured
+              return (
+                <div
+                  key={pack.slug}
+                  className={`relative rounded-2xl p-5 flex flex-col transition-all hover:-translate-y-0.5 hover:shadow-md ${
+                    featured
+                      ? 'bg-slate-900 border-2 border-blue-400/40 text-white'
+                      : 'bg-white border border-slate-200'
+                  }`}
+                >
+                  {featured && (
+                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-400 text-slate-900 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full whitespace-nowrap">
+                      Best value
+                    </div>
+                  )}
+                  <p className={`text-[10px] font-semibold uppercase tracking-widest mb-2 ${featured ? 'text-white/50' : 'text-slate-400'}`}>
+                    {pack.pages} pages
+                  </p>
+                  <div className="mb-1">
+                    <span className={`font-serif text-3xl ${featured ? 'text-white' : 'text-slate-900'}`}>${pack.price}</span>
+                    <span className={`text-xs ml-1 ${featured ? 'text-white/40' : 'text-slate-400'}`}>one-time</span>
+                  </div>
+                  <p className={`text-[10px] mb-4 ${featured ? 'text-white/50' : 'text-slate-400'}`}>
+                    ${pack.perPage} / page
+                  </p>
+                  <button
+                    onClick={() => buyPack(pack.slug)}
+                    disabled={loading || loadingKey !== null}
+                    className={`mt-auto inline-flex items-center justify-center gap-1.5 w-full py-2 rounded-lg font-semibold text-xs transition disabled:opacity-60 ${
+                      featured
+                        ? 'bg-blue-400 text-slate-900 hover:bg-blue-300'
+                        : 'border border-slate-200 text-slate-800 hover:border-slate-400 hover:bg-slate-50'
+                    }`}
+                  >
+                    {loading ? (
+                      <><Spinner /> …</>
+                    ) : (
+                      currentPlan === 'pps' ? 'Top up' : 'Buy pack'
+                    )}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Manage subscription link for paying customers */}

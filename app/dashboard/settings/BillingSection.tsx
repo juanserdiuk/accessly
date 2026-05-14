@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 
 const PLANS = {
-  free:   { label: 'Free',   color: 'bg-slate-100 text-slate-600',   price: null },
-  pro:    { label: 'Pro',    color: 'bg-violet-100 text-violet-700',  price: '$29 / month' },
-  agency: { label: 'Agency', color: 'bg-emerald-100 text-emerald-700', price: '$99 / month' },
+  free:   { label: 'Free',         color: 'bg-slate-100 text-slate-600',    price: null },
+  pps:    { label: 'Pay per scan', color: 'bg-blue-100 text-blue-700',      price: 'Pay as you scan' },
+  pro:    { label: 'Pro',          color: 'bg-violet-100 text-violet-700',  price: '$29 / month' },
+  agency: { label: 'Agency',       color: 'bg-emerald-100 text-emerald-700', price: '$99 / month' },
 } as const
 
 type Plan = keyof typeof PLANS
@@ -90,6 +92,31 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
           </>
         )}
 
+        {plan === 'pps' && (
+          <>
+            <Link
+              href="/upgrade"
+              className="px-4 py-2 text-sm font-semibold rounded-lg transition bg-slate-900 text-white hover:bg-slate-700"
+            >
+              Buy more scans
+            </Link>
+            <PlanButton
+              label={t('billingUpgradePro')}
+              loadingLabel={t('billingLoading')}
+              onClick={() => checkout('pro')}
+              loading={loading === 'pro'}
+              variant="outline"
+            />
+            <PlanButton
+              label={t('billingUpgradeAgency')}
+              loadingLabel={t('billingLoading')}
+              onClick={() => checkout('agency')}
+              loading={loading === 'agency'}
+              variant="outline"
+            />
+          </>
+        )}
+
         {plan === 'pro' && (
           <>
             <PlanButton
@@ -125,6 +152,7 @@ export default function BillingSection({ plan, hasCustomer }: Props) {
       {/* Feature summary */}
       <div className="text-xs text-slate-400 space-y-1">
         {plan === 'free'   && <p>{t('billingFreeBenefits')}</p>}
+        {plan === 'pps'    && <p>Portfolios, white-label reports, salesperson tracking — all unlocked. No monthly fee. Buy scan packs as you need them.</p>}
         {plan === 'pro'    && <p>{t('billingProBenefits')}</p>}
         {plan === 'agency' && <p>{t('billingAgencyBenefits')}</p>}
       </div>
