@@ -59,7 +59,7 @@ export default async function ScheduledScansPage() {
             <p className="text-sm text-slate-500 mb-6 max-w-md mx-auto">
               Run your scans automatically — every hour, every 6 hours, daily, or weekly. Get alerted the moment a score drops.
             </p>
-            <Link href="/#pricing" className="inline-block bg-slate-900 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-700 transition text-sm">
+            <Link href="/upgrade" className="inline-block bg-slate-900 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-700 transition text-sm">
               View plans
             </Link>
           </div>

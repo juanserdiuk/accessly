@@ -63,7 +63,7 @@ export default function WelcomeBanner({ firstName, plan }: Props) {
 
         {plan === 'free' && (
           <Link
-            href="/#pricing"
+            href="/upgrade"
             className="shrink-0 inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-4 py-2.5 rounded-xl hover:bg-white/90 transition text-sm shadow-lg"
           >
             Upgrade

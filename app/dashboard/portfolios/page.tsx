@@ -48,7 +48,7 @@ export default async function PortfoliosPage() {
               Group sites by client, keep their scan history separate, and ship branded reports. Upgrade to unlock.
             </p>
             <Link
-              href="/#pricing"
+              href="/upgrade"
               className="inline-block bg-slate-900 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-slate-700 transition text-sm"
             >
               View plans

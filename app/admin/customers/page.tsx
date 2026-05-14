@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { setCustomerPlan } from '../actions'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -289,6 +290,45 @@ export default async function CustomersPage({ searchParams }: PageProps) {
                       </svg>
                       Stripe
                     </a>
+                  )}
+                </div>
+
+                {/* Admin plan override — comp Pro/Agency for free */}
+                <div className="mt-3 pt-3 border-t border-dashed border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">Plan override</p>
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded-full">
+                      Admin
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {(['free', 'pro', 'agency'] as const).map(p => {
+                      const active = c.plan === p
+                      const targetMeta = planMeta[p]
+                      return (
+                        <form key={p} action={setCustomerPlan} className="flex-1">
+                          <input type="hidden" name="userId" value={c.id} />
+                          <input type="hidden" name="plan" value={p} />
+                          <button
+                            type="submit"
+                            disabled={active}
+                            className={`w-full text-xs font-semibold py-1.5 rounded-lg transition capitalize ${
+                              active
+                                ? `${targetMeta.pill} cursor-default border`
+                                : 'border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300'
+                            }`}
+                            title={active ? `Currently on ${p}` : `Grant ${p} (free, bypasses Stripe)`}
+                          >
+                            {p}
+                          </button>
+                        </form>
+                      )
+                    })}
+                  </div>
+                  {c.stripeCustomerId && c.plan !== 'free' && (
+                    <p className="text-[10px] text-amber-700 mt-1.5 leading-relaxed">
+                      ⚠ Has Stripe sub — downgrade via Stripe portal first, or the next billing event will fight this override.
+                    </p>
                   )}
                 </div>
               </div>

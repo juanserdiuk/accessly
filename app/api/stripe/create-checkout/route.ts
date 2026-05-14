@@ -78,7 +78,10 @@ export async function POST(req: NextRequest) {
 
     const siteUrl = getOrigin(req)
     const successUrl = `${siteUrl}/dashboard?checkout=success`
-    const cancelUrl  = `${siteUrl}/#pricing`
+    // For subscriptions the user almost always came from /upgrade (the
+    // authed pricing page); fall back to the homepage anchor only for
+    // one-time pack purchases that originate from the public Pricing.
+    const cancelUrl  = type === 'subscription' ? `${siteUrl}/upgrade` : `${siteUrl}/#pricing`
     const metadata   = { type, plan, billing, ...promoMetadata }
     const discounts  = stripeCouponId ? [{ coupon: stripeCouponId }] : undefined
 
