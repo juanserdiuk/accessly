@@ -204,23 +204,23 @@ export default function Scanner({ unlimited = false }: { unlimited?: boolean }) 
     <>
       {/* Mobile full-screen scan overlay */}
       {scanning && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col sm:hidden">
+        <div role="dialog" aria-modal="true" aria-labelledby="scan-progress-title" className="fixed inset-0 z-50 bg-white flex flex-col sm:hidden">
           <div className="bg-slate-900 px-5 py-4 flex items-center gap-3 shrink-0">
-            <div className="w-8 h-8 bg-emerald-400/15 rounded-lg flex items-center justify-center text-emerald-400">
+            <div aria-hidden="true" className="w-8 h-8 bg-emerald-400/15 rounded-lg flex items-center justify-center text-emerald-400">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
               </svg>
             </div>
             <div>
-              <div className="text-sm font-semibold text-white">{t('scanning')}</div>
+              <div id="scan-progress-title" className="text-sm font-semibold text-white">{t('scanning')}</div>
               <div className="text-xs text-white/40 truncate max-w-[220px]">{hostname(url)}</div>
             </div>
-            <span className="ml-auto font-mono text-emerald-400 text-sm tabular-nums">{progress}%</span>
+            <span aria-hidden="true" className="ml-auto font-mono text-emerald-400 text-sm tabular-nums">{progress}%</span>
           </div>
 
           <div className="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-            <div className="relative w-24 h-24">
+            <div aria-hidden="true" className="relative w-24 h-24">
               <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
               <div className="absolute inset-0 rounded-full border-4 border-emerald-400 border-t-transparent animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -229,12 +229,19 @@ export default function Scanner({ unlimited = false }: { unlimited?: boolean }) 
             </div>
 
             <div className="text-center">
-              <p className="text-lg font-semibold text-slate-900">{STEP_MSGS[currentStep]}</p>
+              <p className="text-lg font-semibold text-slate-900" aria-live="polite">{STEP_MSGS[currentStep]}</p>
               <p className="text-sm text-slate-400 mt-1">{t('stepOf', { current: currentStep + 1, total: SCAN_PCTS.length })}</p>
             </div>
 
             <div className="w-full">
-              <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progress}
+                aria-label={`Scan progress: ${progress}%`}
+                className="h-2 bg-slate-100 rounded-full overflow-hidden"
+              >
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-300"
                   style={{ width: `${progress}%`, transition: 'width 1.6s cubic-bezier(0.25, 1, 0.5, 1)' }}
@@ -295,8 +302,10 @@ export default function Scanner({ unlimited = false }: { unlimited?: boolean }) 
           ) : (
             <>
               {/* Input */}
+              <label htmlFor="scanner-url-input" className="sr-only">{t('placeholder')}</label>
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
+                  id="scanner-url-input"
                   type="url"
                   inputMode="url"
                   value={url}
@@ -304,18 +313,22 @@ export default function Scanner({ unlimited = false }: { unlimited?: boolean }) 
                   onKeyDown={e => e.key === 'Enter' && runScan()}
                   placeholder={t('placeholder')}
                   disabled={scanning}
+                  aria-describedby={errorMsg ? 'scanner-error' : undefined}
+                  aria-invalid={errorMsg ? true : undefined}
+                  autoComplete="url"
                   className="flex-1 px-4 py-4 sm:py-3 border border-slate-200 rounded-xl text-base sm:text-sm bg-slate-50
-                    focus:outline-none focus:border-emerald-400 transition placeholder:text-slate-300
+                    focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition placeholder:text-slate-300
                     disabled:opacity-60 disabled:cursor-not-allowed"
                 />
                 <button
+                  type="button"
                   onClick={runScan}
                   disabled={scanning || !url.trim()}
                   className="w-full sm:w-auto bg-slate-900 text-white px-5 py-4 sm:py-3 rounded-xl text-sm font-semibold
                     hover:bg-slate-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {scanning ? (
-                    <><span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />{t('scanning')}</>
+                    <><span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />{t('scanning')}</>
                   ) : t('scanNow')}
                 </button>
               </div>
@@ -328,8 +341,8 @@ export default function Scanner({ unlimited = false }: { unlimited?: boolean }) 
 
               {/* Error */}
               {errorMsg && !scanning && (
-                <div className="flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
+                <div id="scanner-error" role="alert" className="flex items-start gap-2.5 text-xs text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500 shrink-0 mt-0.5">
                     <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
                   </svg>
                   {errorMsg}

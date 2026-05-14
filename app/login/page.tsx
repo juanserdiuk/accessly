@@ -104,33 +104,46 @@ function LoginForm() {
           </p>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">{tl('emailLabel')}</label>
+            <label htmlFor="login-email" className="block text-sm font-medium text-slate-700 mb-1.5">{tl('emailLabel')}</label>
             <input
+              id="login-email"
               type="email"
+              autoComplete="email"
               value={email}
               onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: '' })) }}
               placeholder={tl('emailPlaceholder')}
-              className={`w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition ${errors.email ? 'border-red-400' : 'border-slate-200'}`}
+              aria-invalid={errors.email ? true : undefined}
+              aria-describedby={errors.email ? 'login-email-error' : undefined}
+              className={`w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition ${errors.email ? 'border-red-400' : 'border-slate-200'}`}
             />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+            {errors.email && <p id="login-email-error" role="alert" className="text-xs text-red-500 mt-1">{errors.email}</p>}
           </div>
 
           <div className="mb-2">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">{tl('passwordLabel')}</label>
+            <label htmlFor="login-password" className="block text-sm font-medium text-slate-700 mb-1.5">{tl('passwordLabel')}</label>
             <div className="relative">
               <input
+                id="login-password"
                 type={showPass ? 'text' : 'password'}
+                autoComplete="current-password"
                 value={password}
                 onChange={e => { setPassword(e.target.value); setErrors(p => ({ ...p, password: '' })) }}
                 placeholder={tl('passwordPlaceholder')}
-                className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition ${errors.password ? 'border-red-400' : 'border-slate-200'}`}
+                aria-invalid={errors.password ? true : undefined}
+                aria-describedby={errors.password ? 'login-password-error' : undefined}
+                className={`w-full px-4 py-3 pr-16 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition ${errors.password ? 'border-red-400' : 'border-slate-200'}`}
               />
-              <button type="button" onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? t('hide') : t('show')}
+                aria-pressed={showPass}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-10 min-w-[44px] px-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 text-xs font-medium rounded-lg transition"
+              >
                 {showPass ? t('hide') : t('show')}
               </button>
             </div>
-            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+            {errors.password && <p id="login-password-error" role="alert" className="text-xs text-red-500 mt-1">{errors.password}</p>}
           </div>
 
           <div className="flex justify-end mb-3">
@@ -138,18 +151,18 @@ function LoginForm() {
               type="button"
               onClick={handleForgotPassword}
               disabled={resetState !== 'idle'}
-              className="text-xs text-emerald-600 font-medium hover:underline disabled:opacity-60"
+              className="min-h-[44px] -mr-2 px-3 text-xs text-emerald-600 font-medium hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded-lg disabled:opacity-60"
             >
               {resetState === 'sending' ? tl('forgotSending') : tl('forgotPassword')}
             </button>
           </div>
           {resetState === 'sent' && (
-            <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 mb-3">
+            <p role="status" className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 mb-3">
               {tl('forgotSent')}
             </p>
           )}
           {errors.reset && (
-            <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">
+            <p role="alert" className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3">
               {errors.reset}
             </p>
           )}

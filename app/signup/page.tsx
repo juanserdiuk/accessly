@@ -249,51 +249,68 @@ function SignupForm() {
 
           <div className="grid grid-cols-2 gap-3 mb-4">
             {[
-              ['firstName', ts('firstNameLabel'), ts('firstNamePlaceholder')],
-              ['lastName', ts('lastNameLabel'), ts('lastNamePlaceholder')],
-            ].map(([k, label, ph]) => (
+              ['firstName', ts('firstNameLabel'), ts('firstNamePlaceholder'), 'given-name'],
+              ['lastName',  ts('lastNameLabel'),  ts('lastNamePlaceholder'),  'family-name'],
+            ].map(([k, label, ph, autoComplete]) => (
               <div key={k}>
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+                <label htmlFor={`signup-${k}`} className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
                 <input
+                  id={`signup-${k}`}
                   type="text"
+                  autoComplete={autoComplete}
                   value={form[k as keyof typeof form]}
                   onChange={e => update(k, e.target.value)}
                   placeholder={ph}
-                  className={`w-full px-3 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition ${errors[k] ? 'border-red-400' : 'border-slate-200'}`}
+                  aria-invalid={errors[k] ? true : undefined}
+                  aria-describedby={errors[k] ? `signup-${k}-error` : undefined}
+                  className={`w-full px-3 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition ${errors[k] ? 'border-red-400' : 'border-slate-200'}`}
                 />
-                {errors[k] && <p className="text-xs text-red-500 mt-1">{errors[k]}</p>}
+                {errors[k] && <p id={`signup-${k}-error`} role="alert" className="text-xs text-red-500 mt-1">{errors[k]}</p>}
               </div>
             ))}
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">{ts('emailLabel')}</label>
+            <label htmlFor="signup-email" className="block text-sm font-medium text-slate-700 mb-1.5">{ts('emailLabel')}</label>
             <input
+              id="signup-email"
               type="email"
+              autoComplete="email"
               value={form.email}
               onChange={e => update('email', e.target.value)}
               placeholder={ts('emailPlaceholder')}
-              className={`w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition ${errors.email ? 'border-red-400' : 'border-slate-200'}`}
+              aria-invalid={errors.email ? true : undefined}
+              aria-describedby={errors.email ? 'signup-email-error' : undefined}
+              className={`w-full px-4 py-3 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition ${errors.email ? 'border-red-400' : 'border-slate-200'}`}
             />
-            {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+            {errors.email && <p id="signup-email-error" role="alert" className="text-xs text-red-500 mt-1">{errors.email}</p>}
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">{ts('passwordLabel')}</label>
+            <label htmlFor="signup-password" className="block text-sm font-medium text-slate-700 mb-1.5">{ts('passwordLabel')}</label>
             <div className="relative">
               <input
+                id="signup-password"
                 type={showPass ? 'text' : 'password'}
+                autoComplete="new-password"
                 value={form.password}
                 onChange={e => update('password', e.target.value)}
                 placeholder={ts('passwordPlaceholder')}
-                className={`w-full px-4 py-3 pr-11 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 transition ${errors.password ? 'border-red-400' : 'border-slate-200'}`}
+                aria-invalid={errors.password ? true : undefined}
+                aria-describedby={errors.password ? 'signup-password-error' : undefined}
+                className={`w-full px-4 py-3 pr-16 border rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-emerald-400 focus-visible:ring-2 focus-visible:ring-emerald-400 transition ${errors.password ? 'border-red-400' : 'border-slate-200'}`}
               />
-              <button type="button" onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-medium">
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                aria-label={showPass ? t('hide') : t('show')}
+                aria-pressed={showPass}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-10 min-w-[44px] px-2 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition"
+              >
                 {showPass ? t('hide') : t('show')}
               </button>
             </div>
-            {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+            {errors.password && <p id="signup-password-error" role="alert" className="text-xs text-red-500 mt-1">{errors.password}</p>}
             {form.password.length > 0 && (
               <div className="mt-2">
                 <div className="flex gap-1 mb-1">
