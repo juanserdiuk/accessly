@@ -11,10 +11,10 @@
   },
   "hero": {
     "badge": "Verificaciones WCAG 2.2 AA y AAA",
-    "headlineBefore": "Haz que cada sitio web sea",
-    "headlineHighlight": "accesible",
-    "headlineAfter": "para todos",
-    "sub": "Analiza cualquier URL en busca de problemas de accesibilidad en segundos. Obtén informes detallados, realiza un seguimiento del cumplimiento y soluciona los problemas rápidamente.",
+    "headlineBefore": "La auditoría de accesibilidad que no te cuesta",
+    "headlineHighlight": "cinco mil dólares.",
+    "headlineAfter": "",
+    "sub": "Construido sobre 18 años de consultoría WCAG. Escanea cualquier URL en 12 segundos — detecta los mismos problemas que un consultor sénior, sin la reunión inicial de seis semanas.",
     "ctaScan": "Escanear una URL gratis →",
     "ctaPlans": "Ver planes",
     "stat1Value": "10K+",
@@ -22,7 +22,8 @@
     "stat2Value": "500+",
     "stat2Label": "Sitios analizados",
     "stat3Value": "98%",
-    "stat3Label": "Tasa de precisión"
+    "stat3Label": "Tasa de precisión",
+    "liveScans": "{count} escaneos esta semana"
   },
   "howItWorks": {
     "label": "Cómo funciona",

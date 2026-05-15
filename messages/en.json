@@ -11,10 +11,10 @@
   },
   "hero": {
     "badge": "WCAG 2.2 AA & AAA Compliant Checks",
-    "headlineBefore": "Make every website",
-    "headlineHighlight": "accessible",
-    "headlineAfter": "to everyone",
-    "sub": "Scan any URL for accessibility issues in seconds. Get actionable reports, track compliance over time, and fix issues fast.",
+    "headlineBefore": "The accessibility audit that doesn't cost you",
+    "headlineHighlight": "five thousand dollars.",
+    "headlineAfter": "",
+    "sub": "Built by 18 years of WCAG consulting. Scan any URL in 12 seconds — catches the same issues a senior consultant would, minus the six-week discovery call.",
     "ctaScan": "Scan a URL free →",
     "ctaPlans": "View plans",
     "stat1Value": "10K+",
@@ -22,7 +22,8 @@
     "stat2Value": "500+",
     "stat2Label": "Sites scanned",
     "stat3Value": "98%",
-    "stat3Label": "Accuracy rate"
+    "stat3Label": "Accuracy rate",
+    "liveScans": "{count} scans run this week"
   },
   "howItWorks": {
     "label": "How it works",
