@@ -167,9 +167,10 @@ export default async function ScanReportPage({
                   strokeDasharray={2 * Math.PI * 54}
                   strokeDashoffset={2 * Math.PI * 54 * (1 - scan.score / 100)} />
               </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                <span className={`font-serif text-4xl leading-none ${scoreTextColor(scan.score)}`}>{scan.score}</span>
-                <span className="text-xs text-slate-400 leading-none">/100</span>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`font-serif text-5xl leading-none ${scoreTextColor(scan.score)}`} aria-label={`${scan.score} out of 100`}>
+                  {scan.score}
+                </span>
               </div>
             </div>
           </div>
