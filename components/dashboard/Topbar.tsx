@@ -2,6 +2,8 @@
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
 import GlobalSearch from './GlobalSearch'
+import NotificationsButton from './NotificationsButton'
+import ExportButton from './ExportButton'
 
 interface Props {
   title: string
@@ -18,15 +20,10 @@ export default function Topbar({ title, subtitle }: Props) {
       </div>
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         <GlobalSearch />
-        <button className="relative w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition">
-          🔔
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white" />
-        </button>
-        <button className="hidden md:flex items-center gap-2 px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 hover:bg-slate-50 transition">
-          ↓ {t('export')}
-        </button>
+        <NotificationsButton />
+        <ExportButton />
         <Link href="/dashboard/scans/new"
-          className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition">
+          className="hidden sm:flex items-center gap-2 px-4 py-2 bg-slate-900 text-white text-sm font-semibold rounded-lg hover:bg-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2">
           {t('addSite')}
         </Link>
       </div>
