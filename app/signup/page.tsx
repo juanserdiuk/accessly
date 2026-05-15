@@ -143,12 +143,9 @@ function SignupForm() {
       setErrors({ email: error.message })
       return
     }
-    // Fire-and-forget — welcome email is best-effort, never block the UI
-    fetch('/api/send-welcome', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: form.email, firstName: form.firstName }),
-    }).catch(() => {})
+    // Welcome email is no longer fired here — it now fires in the auth
+    // callback AFTER the user confirms their email, so the "your account is
+    // live and ready to go" copy is actually true at that moment.
 
     // If the project has email confirmation disabled, signUp returns a
     // session immediately — go straight to the dashboard, banner will fire.
