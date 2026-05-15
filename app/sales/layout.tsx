@@ -9,6 +9,7 @@ export default async function SalesLayout({ children }: { children: React.ReactN
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/login?next=%2Fsales')
+  if (!user.email_confirmed_at) redirect('/auth/verify-pending')
 
   // Must have a salesperson row to access this portal
   const admin = createAdminClient()
