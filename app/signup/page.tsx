@@ -5,6 +5,104 @@ import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
 
+/**
+ * Post-signup screen. The user has been created in Supabase but their email
+ * is NOT yet confirmed. The original 'Sign in to your account' CTA here was
+ * misleading — signing in fails until the verification link in the email is
+ * clicked. Replaced with clear instructions + a real resend button.
+ */
+function SuccessScreen({ email }: { email: string }) {
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [resendError, setResendError] = useState('')
+
+  async function resend() {
+    setResendState('sending')
+    setResendError('')
+    try {
+      const supabase = createClient()
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent('/dashboard')}`,
+        },
+      })
+      if (error) {
+        setResendState('error')
+        setResendError(error.message)
+        return
+      }
+      setResendState('sent')
+    } catch (err) {
+      setResendState('error')
+      setResendError((err as Error).message ?? 'Could not resend')
+    }
+  }
+
+  return (
+    <main id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
+      <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-10 max-w-md w-full shadow-xl">
+        <div className="w-16 h-16 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+          <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+          </svg>
+        </div>
+        <h2 className="font-serif text-2xl text-slate-900 mb-2 text-center">Check your inbox.</h2>
+        <p className="text-sm text-slate-500 mb-6 text-center leading-relaxed">
+          We sent a confirmation link to <strong className="text-slate-700 break-all">{email}</strong>.
+          Click it to activate your account — we&apos;ll take you back into the app from there.
+        </p>
+
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-6 text-xs text-slate-500 leading-relaxed">
+          <p className="font-semibold text-slate-700 mb-1.5">Didn&apos;t get it within a minute?</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li><strong>Check your spam / junk folder</strong> — first-time confirmation emails often land there.</li>
+            <li>Check Promotions or Updates if you&apos;re on Gmail.</li>
+            <li>Make sure you typed the email correctly above.</li>
+            <li>Hit <strong>Resend</strong> below for a fresh link.</li>
+          </ul>
+        </div>
+
+        {resendState === 'sent' ? (
+          <div role="status" className="w-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium px-4 py-3 rounded-xl flex items-center justify-center gap-2">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Fresh verification email sent — check your inbox.
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={resend}
+            disabled={resendState === 'sending'}
+            className="w-full bg-slate-900 text-white font-semibold py-3 rounded-xl hover:bg-slate-700 transition disabled:opacity-60 flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+          >
+            {resendState === 'sending' ? (
+              <>
+                <span aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Sending…
+              </>
+            ) : (
+              'Resend verification email'
+            )}
+          </button>
+        )}
+        {resendState === 'error' && resendError && (
+          <p role="alert" className="mt-3 text-xs text-red-600 text-center">{resendError}</p>
+        )}
+
+        <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+          <Link href="/signup" className="text-xs font-medium text-slate-500 hover:text-slate-800 transition">
+            Wrong email? Start over
+          </Link>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 // Pretty labels + prices for the pending-purchase banner shown above the
 // signup form when the visitor arrives mid-purchase from /#pricing.
 const PACK_INFO: Record<string, { label: string; price: string; pages: number }> = {
@@ -157,20 +255,7 @@ function SignupForm() {
   }
 
   if (done) return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="bg-white border border-slate-200 rounded-2xl p-10 max-w-sm w-full text-center shadow-xl">
-        <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <h2 className="font-serif text-2xl text-slate-900 mb-2">{ts('successTitle')}</h2>
-        <p className="text-sm text-slate-500 mb-6">{ts('successSub')} <strong>{form.email}</strong></p>
-        <Link href="/login" className="block bg-emerald-400 text-slate-900 font-semibold py-3 rounded-xl hover:bg-emerald-300 transition text-sm">
-          {ts('successCta')}
-        </Link>
-      </div>
-    </div>
+    <SuccessScreen email={form.email} />
   )
 
   return (
