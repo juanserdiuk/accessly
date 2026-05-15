@@ -49,7 +49,7 @@ function SuccessScreen({ email }: { email: string }) {
             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
           </svg>
         </div>
-        <h2 className="font-serif text-2xl text-slate-900 mb-2 text-center">Check your inbox.</h2>
+        <h1 className="font-serif text-2xl text-slate-900 mb-2 text-center">Check your inbox.</h1>
         <p className="text-sm text-slate-500 mb-6 text-center leading-relaxed">
           We sent a confirmation link to <strong className="text-slate-700 break-all">{email}</strong>.
           Click it to activate your account — we&apos;ll take you back into the app from there.
@@ -314,7 +314,7 @@ function SignupForm() {
             </div>
           )}
 
-          <h3 className="font-serif text-2xl text-slate-900 mb-1">{ts('title')}</h3>
+          <h1 className="font-serif text-2xl text-slate-900 mb-1">{ts('title')}</h1>
           <p className="text-sm text-slate-500 mb-7">
             {ts('haveAccount')} <Link href="/login" className="text-emerald-600 font-medium hover:underline">{ts('signIn')}</Link>
           </p>

@@ -1,5 +1,13 @@
+import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy — Accessly',
+  description: 'How Accessly collects, stores, and uses your data. Plain-English privacy commitments for our WCAG accessibility scanner.',
+  alternates: { canonical: '/privacy' },
+  robots: { index: true, follow: true },
+}
 
 const EFFECTIVE = 'May 7, 2026'
 const CONTACT   = process.env.ADMIN_EMAIL ?? 'hello@accessly.us'

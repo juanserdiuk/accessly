@@ -1,7 +1,43 @@
+import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getTranslations, getLocale } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+
+/**
+ * Dynamic metadata so shared scan links get real titles + descriptions
+ * in Slack, Twitter, LinkedIn preview cards (and in search results).
+ */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}): Promise<Metadata> {
+  const { id } = await params
+  try {
+    const supabase = createAdminClient()
+    const { data: scan } = await supabase
+      .from('scans')
+      .select('url, score, errors')
+      .eq('id', id)
+      .single()
+    if (!scan) return { title: 'Scan report — Accessly', robots: { index: false } }
+    let host = scan.url
+    try { host = new URL(scan.url).hostname } catch { /* keep raw */ }
+    return {
+      title: `${host} scored ${scan.score}/100 — Accessly`,
+      description: `Public WCAG 2.2 accessibility report for ${host}. ${scan.errors} accessibility error${scan.errors === 1 ? '' : 's'} found.`,
+      alternates: { canonical: `/scan/${id}` },
+      robots: { index: true, follow: true },
+      openGraph: {
+        title: `${host} scored ${scan.score}/100 on WCAG 2.2`,
+        description: `Public accessibility audit by Accessly — ${scan.errors} errors found.`,
+      },
+    }
+  } catch {
+    return { title: 'Scan report — Accessly', robots: { index: false } }
+  }
+}
 
 type NodeDetail = {
   html: string

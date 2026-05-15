@@ -1,5 +1,13 @@
+import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service — Accessly',
+  description: 'The terms that govern using Accessly. Clear, plain-language, no enterprise legalese.',
+  alternates: { canonical: '/terms' },
+  robots: { index: true, follow: true },
+}
 
 const EFFECTIVE = 'May 7, 2026'
 const CONTACT   = process.env.ADMIN_EMAIL ?? 'hello@accessly.us'

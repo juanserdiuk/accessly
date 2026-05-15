@@ -98,7 +98,7 @@ function LoginForm() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center px-6 bg-slate-50">
         <div className="w-full max-w-md bg-white border border-slate-200 rounded-2xl p-10 shadow-xl">
-          <h3 className="font-serif text-2xl text-slate-900 mb-1">{tl('title')}</h3>
+          <h1 className="font-serif text-2xl text-slate-900 mb-1">{tl('title')}</h1>
           <p className="text-sm text-slate-500 mb-7">
             {tl('noAccount')} <Link href="/signup" className="text-emerald-600 font-medium hover:underline">{tl('createOne')}</Link>
           </p>

@@ -46,20 +46,15 @@ export const metadata: Metadata = {
     siteName: 'Accessly',
     title: 'Accessly — WCAG Accessibility Scanner',
     description: 'Scan any website for WCAG 2.2 accessibility issues in seconds. Actionable reports, compliance tracking, and team workflows — free to start.',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: 'Accessly — WCAG Accessibility Scanner',
-      },
-    ],
+    // Open Graph image generated dynamically by app/opengraph-image.tsx
+    // so social previews actually render (no static /og-image.png exists).
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Accessly — WCAG Accessibility Scanner',
     description: 'Scan any website for WCAG 2.2 accessibility issues in seconds. Actionable reports, compliance tracking, and team workflows — free to start.',
-    images: ['/og-image.png'],
+    // Twitter card auto-uses app/opengraph-image.tsx when no static image
+    // is set, via Next.js convention.
   },
   robots: {
     index: true,

@@ -96,7 +96,7 @@ export default function NotificationsButton() {
         <div
           role="dialog"
           aria-label="Recent activity"
-          className="absolute right-0 mt-2 w-80 sm:w-96 max-h-[70vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 animate-[notifFadeIn_120ms_ease-out]"
+          className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-1rem)] sm:w-96 max-h-[70vh] overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 animate-[notifFadeIn_120ms_ease-out]"
         >
           <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
             <p className="text-sm font-semibold text-slate-900">Recent activity</p>
