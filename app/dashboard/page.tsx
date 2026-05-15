@@ -136,8 +136,26 @@ export default async function DashboardPage() {
   // user_metadata.pending_intent was stashed during signup; render a banner
   // letting them finish their purchase. Cleared on successful checkout by
   // the Stripe webhook OR by the "Maybe later" dismiss action.
+  //
+  // CAVEAT: Supabase user_metadata in the JWT is a snapshot from when the
+  // session was issued (i.e. at signup time). The webhook clears it
+  // server-side via admin.updateUserById, but the user's existing JWT
+  // still carries the stale snapshot until they re-auth. So we cross-
+  // reference: if the profile is already on a paid plan, the intent is
+  // implicitly fulfilled and we suppress the banner regardless of what
+  // the stale JWT says.
   const rawIntent = user!.user_metadata?.pending_intent as Partial<PendingIntent> | null | undefined
+  const intentSuppressed =
+    // Any paid plan after a pack intent → they just bought it (or already had something).
+    (rawIntent?.type === 'pack' && plan !== 'free') ||
+    // Already on the subscription tier they wanted → fulfilled.
+    (rawIntent?.type === 'subscription' && (
+      (rawIntent.plan === 'pro' && (plan === 'pro' || plan === 'agency')) ||
+      (rawIntent.plan === 'agency' && plan === 'agency')
+    ))
+
   const pendingIntent: PendingIntent | null =
+    !intentSuppressed &&
     rawIntent && typeof rawIntent === 'object' && (rawIntent.type === 'pack' || rawIntent.type === 'subscription') && typeof rawIntent.plan === 'string'
       ? {
           type: rawIntent.type,
