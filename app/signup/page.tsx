@@ -1,13 +1,9 @@
 'use client'
-import { useEffect, useState, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase/client'
-
-const plans = ['Free','Pro','Agency']
-const prices: Record<string, string> = { Free: '$0/mo', Pro: '$29/mo', Agency: '$99/mo' }
-const planParamMap: Record<string, string> = { pro: 'Pro', agency: 'Agency', free: 'Free' }
 
 // Pretty labels + prices for the pending-purchase banner shown above the
 // signup form when the visitor arrives mid-purchase from /#pricing.
@@ -80,16 +76,11 @@ function SignupForm() {
   const t = useTranslations('auth')
   const ts = useTranslations('auth.signup')
   const searchParams = useSearchParams()
-  // Preselect plan + remember billing cadence when arriving from Pricing.
-  const planParam = (searchParams.get('plan') ?? '').toLowerCase()
-  const billingParam = searchParams.get('billing') === 'annual' ? 'annual' : 'monthly'
-  const initialPlan = planParamMap[planParam] ?? 'Pro'
   // Encoded purchase intent from /#pricing (new unified flow). Tells us what
   // the visitor wanted to buy so we can resume the purchase after they
   // verify their email and land on the dashboard.
   const intent = parseIntent(searchParams.get('intent'))
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', password: '' })
-  const [plan, setPlan] = useState(initialPlan)
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
@@ -143,7 +134,6 @@ function SignupForm() {
         data: {
           first_name: form.firstName,
           last_name: form.lastName,
-          plan,
           ...(pendingIntent ? { pending_intent: pendingIntent } : {}),
         },
       },
@@ -323,23 +313,14 @@ function SignupForm() {
             )}
           </div>
 
-          <div className="mb-5">
-            <label className="block text-sm font-medium text-slate-700 mb-2">{ts('choosePlan')}</label>
-            <div className="grid grid-cols-3 gap-2">
-              {plans.map(p => (
-                <button key={p} type="button" onClick={() => setPlan(p)}
-                  className={`border rounded-xl py-2.5 text-center transition ${plan === p ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'}`}>
-                  <div className={`text-sm font-semibold ${plan === p ? 'text-emerald-700' : 'text-slate-800'}`}>{p}</div>
-                  <div className={`text-xs mt-0.5 ${plan === p ? 'text-emerald-500' : 'text-slate-400'}`}>{prices[p]}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button onClick={handleSubmit} disabled={loading}
-            className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-700 transition disabled:opacity-60 flex items-center justify-center gap-2">
-            {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
-            {loading ? ts('submitLoading') : plan === 'Free' ? ts('submitFree') : ts('submitTrial', { plan })}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            type="button"
+            className="w-full bg-slate-900 text-white font-semibold py-3.5 rounded-xl hover:bg-slate-700 transition disabled:opacity-60 flex items-center justify-center gap-2 mt-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2"
+          >
+            {loading ? <span aria-hidden="true" className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+            {loading ? ts('submitLoading') : ts('submitCreate')}
           </button>
 
           <p className="text-xs text-slate-400 text-center mt-4">

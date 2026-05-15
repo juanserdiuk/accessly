@@ -605,7 +605,8 @@
       "privacyLink": "Política de Privacidad",
       "successTitle": "¡Cuenta creada!",
       "successSub": "Revisa tu bandeja de entrada — enviamos una confirmación a",
-      "successCta": "Inicia sesión en tu cuenta →"
+      "successCta": "Inicia sesión en tu cuenta →",
+      "submitCreate": "Crear cuenta"
     }
   },
   "errors": {

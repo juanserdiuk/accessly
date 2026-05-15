@@ -605,7 +605,8 @@
       "privacyLink": "Privacy Policy",
       "successTitle": "Account created!",
       "successSub": "Check your inbox — we sent a confirmation to",
-      "successCta": "Sign in to your account →"
+      "successCta": "Sign in to your account →",
+      "submitCreate": "Create account"
     }
   },
   "errors": {
