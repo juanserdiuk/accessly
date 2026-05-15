@@ -7,10 +7,13 @@ export const metadata: Metadata = {
   description: 'Every page on Accessly, grouped by section, with descriptions and canonical URLs.',
 }
 
-// Canonical domain for all links shown on this page — locks them to the
-// production host so visiting from any preview / Vercel deployment URL
-// still routes the user back to accessly.us.
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+// Canonical domain for all links shown on this page — HARDCODED to the
+// production host so the displayed URLs always read "accessly.us/..." even
+// when this page is viewed from a preview deployment URL or when the
+// NEXT_PUBLIC_SITE_URL env var is mis-set. The sitemap is the canonical
+// index of the site; it should never echo a vercel.app preview URL back to
+// users.
+const SITE_URL = 'https://accessly.us'
 
 interface RouteEntry {
   path: string
@@ -152,20 +155,20 @@ export default function SitemapPage() {
       <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
 
         {/* Hero */}
-        <section className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-12 text-center">
-          <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-gradient-to-br from-emerald-200/30 via-violet-200/15 to-transparent rounded-full blur-3xl" />
+        <section className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-12 text-center overflow-hidden">
+          <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] max-w-[110vw] bg-gradient-to-br from-emerald-200/30 via-violet-200/15 to-transparent rounded-full blur-3xl" />
 
           <div className="relative">
             <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 mb-6 shadow-sm">
               <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-xs font-semibold text-slate-700">{totalRoutes} routes mapped</span>
             </div>
-            <h1 className="font-serif text-4xl sm:text-5xl text-slate-900 mb-4 leading-tight tracking-tight">
+            <h1 className="font-serif text-3xl sm:text-5xl text-slate-900 mb-4 leading-tight tracking-tight">
               Every page on Accessly,<br />
               <span className="bg-gradient-to-r from-emerald-600 to-violet-600 bg-clip-text text-transparent">in one place.</span>
             </h1>
-            <p className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-              Public marketing, the customer dashboard, admin console, sales portal, and machine-readable indexes — all linking back to <code className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">{SITE_URL.replace(/^https?:\/\//, '')}</code>.
+            <p className="text-slate-500 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
+              Public marketing, the customer dashboard, admin console, sales portal, and machine-readable indexes — all linking back to <code className="font-mono text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded text-xs sm:text-sm">{SITE_URL.replace(/^https?:\/\//, '')}</code>.
             </p>
 
             {/* Quick jump chips */}
@@ -281,7 +284,7 @@ export default function SitemapPage() {
                             </div>
                           </div>
                           <p className="text-xs text-slate-500 leading-relaxed mb-2">{route.description}</p>
-                          <p className="text-[10px] font-mono text-slate-400 truncate" title={url}>
+                          <p className="text-[10px] font-mono text-slate-400 break-all leading-tight" title={url}>
                             {url}
                           </p>
                         </div>

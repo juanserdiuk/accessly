@@ -73,7 +73,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} className={`${inter.variable} ${bricolage.variable}`}>
-      <body suppressHydrationWarning>
+      {/* overflow-x-clip on body is a global safety net so no decorative
+          element (gradient blurs, animated orbs) can ever cause horizontal
+          scroll on mobile. Uses `clip` not `hidden` so position:sticky on
+          children still works. */}
+      <body suppressHydrationWarning className="overflow-x-clip">
         {/* Skip-to-content link — invisible until focused via keyboard. Critical
             a11y feature for keyboard-only users and screen-reader users so they
             don't have to tab through the entire site header on every page. */}

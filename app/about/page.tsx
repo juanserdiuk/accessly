@@ -146,20 +146,20 @@ export default async function AboutPage() {
       <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
 
         {/* Hero */}
-        <section className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-20 pb-12 text-center">
-          <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-br from-emerald-200/30 via-violet-200/15 to-transparent rounded-full blur-3xl" />
+        <section className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-12 text-center overflow-hidden">
+          <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] max-w-[110vw] bg-gradient-to-br from-emerald-200/30 via-violet-200/15 to-transparent rounded-full blur-3xl" />
 
           <div className="relative">
-            <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2 bg-white border border-slate-200 rounded-full px-4 py-1.5 mb-5 sm:mb-6 shadow-sm">
               <span className="text-base leading-none">🌴</span>
               <span className="text-xs font-semibold text-slate-700">Made in Southern California</span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-6xl text-slate-900 mb-5 leading-[1.05] tracking-tight">
+            <h1 className="font-serif text-[2.25rem] sm:text-6xl text-slate-900 mb-4 sm:mb-5 leading-[1.05] tracking-tight">
               Accessibility,<br />
               <span className="bg-gradient-to-r from-emerald-600 via-cyan-600 to-violet-600 bg-clip-text text-transparent">audited honestly.</span>
             </h1>
-            <p className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="text-slate-500 text-sm sm:text-lg max-w-2xl mx-auto leading-relaxed">
               Accessly was founded in Corona, California by a senior accessibility consultant who spent 18 years filing the same WCAG bug reports — and got tired of charging clients to do work a good scanner can do in seconds.
             </p>
           </div>
@@ -177,8 +177,8 @@ export default async function AboutPage() {
               {/* Photo with enhancement treatment */}
               <div className="relative shrink-0 mx-auto sm:mx-0">
                 {/* Outer glow + gradient ring */}
-                <div aria-hidden="true" className="absolute -inset-3 bg-gradient-to-br from-emerald-400 via-cyan-400 to-violet-500 rounded-full blur-md opacity-60" />
-                <div className="relative w-40 h-40 sm:w-44 sm:h-44 rounded-full overflow-hidden ring-4 ring-white shadow-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <div aria-hidden="true" className="absolute -inset-2 sm:-inset-3 bg-gradient-to-br from-emerald-400 via-cyan-400 to-violet-500 rounded-full blur-md opacity-60" />
+                <div className="relative w-32 h-32 sm:w-44 sm:h-44 rounded-full overflow-hidden ring-4 ring-white shadow-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
                   {avatarUrl ? (
                     <>
                       {/* The avatar with subtle filters to make it pop */}
@@ -215,27 +215,27 @@ export default async function AboutPage() {
               <div className="text-center sm:text-left min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-2">Founder & Builder</p>
                 <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 mb-1 leading-tight">Juan Serdiuk</h2>
-                <p className="text-sm text-slate-500 mb-4 leading-relaxed">
+                <p className="text-xs sm:text-sm text-slate-500 mb-4 leading-relaxed break-words">
                   Senior accessibility consultant · 18+ years front-end · UC Irvine · ex-Level Access · ex-MIND Research Institute · trilingual (EN · ES · PT) · Corona, CA.
                 </p>
                 <p className="text-base text-slate-700 leading-relaxed">
                   I started in 2008 making pixel-perfect sites from Photoshop. I&apos;ve since led international teams across three continents, rebuilt a 100M-user education product from Flash to HTML5 (+34% performance), and audited more sites for WCAG 2.1 AA/AAA than I can count.
                   Accessly is what I wanted on day one of every single one of those audits.
                 </p>
-                <div className="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <div className="mt-5 flex flex-wrap items-center justify-center sm:justify-start gap-2 max-w-full">
                   <a href="https://www.linkedin.com/in/juan-serdiuk-72962b99" target="_blank" rel="noopener noreferrer"
-                     className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-900 text-white px-3.5 py-2 rounded-lg hover:bg-slate-700 transition">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                     className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-900 text-white px-3 py-2 rounded-lg hover:bg-slate-700 transition shrink-0">
+                    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
                     Juan on LinkedIn
                   </a>
                   <a href="https://www.linkedin.com/company/accessly-web-scanner/" target="_blank" rel="noopener noreferrer"
-                     className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3.5 py-2 rounded-lg hover:bg-slate-50 transition">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
-                    Accessly on LinkedIn
+                     className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 transition shrink-0">
+                    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                    Company
                   </a>
                   <a href="mailto:contact@accessly.us"
-                     className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3.5 py-2 rounded-lg hover:bg-slate-50 transition">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                     className="inline-flex items-center gap-1.5 text-xs font-semibold border border-slate-200 text-slate-700 px-3 py-2 rounded-lg hover:bg-slate-50 transition shrink-0">
+                    <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     Email
                   </a>
                 </div>
@@ -309,24 +309,24 @@ export default async function AboutPage() {
             <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 mb-2">18 years of receipts.</h2>
             <p className="text-sm text-slate-400">Real jobs, real outcomes. Not a startup origin story arc.</p>
           </div>
-          <ol className="relative border-l-2 border-slate-200 ml-3">
+          <ol className="relative border-l-2 border-slate-200 ml-1.5 sm:ml-3">
             {TIMELINE.map((t) => {
               const highlighted = (t as { highlight?: boolean }).highlight
               return (
-                <li key={t.year + t.where} className="relative pl-8 pb-8 last:pb-0">
+                <li key={t.year + t.where} className="relative pl-6 sm:pl-8 pb-7 last:pb-0">
                   <div className={`absolute -left-[9px] w-4 h-4 rounded-full ring-4 ring-white ${
                     highlighted ? 'bg-emerald-500' : 'bg-slate-300'
                   }`} />
-                  <div className="flex items-baseline gap-3 flex-wrap mb-1">
-                    <span className={`font-mono text-xs font-bold tracking-wide ${
+                  <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap mb-1">
+                    <span className={`font-mono text-[10px] sm:text-xs font-bold tracking-wide ${
                       highlighted ? 'text-emerald-700' : 'text-slate-400'
                     }`}>
                       {t.year}
                     </span>
-                    <span className="font-semibold text-slate-900">{t.role}</span>
+                    <span className="font-semibold text-slate-900 text-sm sm:text-base">{t.role}</span>
                     <span className="text-xs text-slate-400">at {t.where}</span>
                   </div>
-                  <p className={`text-sm leading-relaxed ${highlighted ? 'text-slate-700' : 'text-slate-500'}`}>
+                  <p className={`text-xs sm:text-sm leading-relaxed ${highlighted ? 'text-slate-700' : 'text-slate-500'}`}>
                     {t.note}
                   </p>
                 </li>
