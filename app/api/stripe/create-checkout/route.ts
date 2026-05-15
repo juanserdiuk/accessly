@@ -95,6 +95,9 @@ export async function POST(req: NextRequest) {
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         client_reference_id: user?.id,
+        // Pre-fill the email so Stripe can send a receipt + match the
+        // session back to a customer record.
+        ...(user?.email ? { customer_email: user.email } : {}),
         metadata,
         ...(discounts ? { discounts } : {}),
         line_items: [{
@@ -122,6 +125,10 @@ export async function POST(req: NextRequest) {
       const session = await stripe.checkout.sessions.create({
         mode: 'payment',
         client_reference_id: user?.id,
+        // Pre-fill the email so Stripe can send a receipt for the pack
+        // purchase. Now that the signup-first flow requires auth before
+        // checkout, user.email is always set here.
+        ...(user?.email ? { customer_email: user.email } : {}),
         metadata,
         ...(discounts ? { discounts } : { allow_promotion_codes: true }),
         line_items: [{
