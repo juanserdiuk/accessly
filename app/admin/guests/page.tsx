@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 import TokenForm from './TokenForm'
 import { CopyButton, RevokeButton } from './TokenActions'
 
@@ -51,6 +52,8 @@ function StatusBadge({ token }: { token: GuestToken }) {
 }
 
 export default async function GuestsPage() {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const admin = createAdminClient()
 
   const { data: tokens } = await admin

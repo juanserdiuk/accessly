@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 
 type Message = {
   id: string
@@ -36,6 +37,8 @@ function locationLabel(m: Message) {
 }
 
 export default async function MessagesPage() {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const supabase = createAdminClient()
   const { data: messages } = await supabase
     .from('contact_messages')

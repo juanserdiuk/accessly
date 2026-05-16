@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { markCommissionPaid, toggleSalespersonStatus, updateSalespersonCommission } from '../actions'
@@ -12,6 +13,8 @@ function fmtDate(iso: string) {
 }
 
 export default async function SalespersonDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const { id } = await params
   const admin = createAdminClient()
 

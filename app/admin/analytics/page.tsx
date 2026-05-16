@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 
 function fmtMoney(cents: number) {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100)
@@ -14,6 +15,8 @@ function flag(country: string | null | undefined) {
 }
 
 export default async function AdminAnalyticsPage() {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const admin = createAdminClient()
   const now = new Date()
   const days = 30

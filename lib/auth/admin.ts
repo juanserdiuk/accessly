@@ -1,3 +1,8 @@
+import 'server-only'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import type { User } from '@supabase/supabase-js'
+
 /**
  * Centralized admin email check.
  *
@@ -34,4 +39,32 @@ function adminEmailSet(): Set<string> {
 export function isAdminEmail(email: string | null | undefined): boolean {
   if (!email) return false
   return adminEmailSet().has(email.trim().toLowerCase())
+}
+
+/**
+ * Synchronous admin guard for server components.
+ *
+ * MUST be called as the FIRST awaited statement in any admin server
+ * component (page.tsx) — BEFORE any data fetching. Reason: Next.js App
+ * Router renders layouts and pages in parallel for performance. A
+ * layout-level `redirect()` correctly bounces the user, but the
+ * page-level data fetches start in parallel and complete before the
+ * redirect is finalized. Their result gets serialized into the RSC
+ * payload that ships with the redirect response, leaking sensitive
+ * data (customer emails, plan info, etc.) to anonymous clients.
+ *
+ * Calling `await requireAdmin()` at the very top of each admin page
+ * forces serial execution: if it redirects, no downstream `await`
+ * runs, no Supabase query fires, nothing leaks.
+ *
+ * Returns the verified admin user — callers can pass it into their
+ * own queries without re-fetching from getUser().
+ */
+export async function requireAdmin(): Promise<User> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+  if (!user.email_confirmed_at) redirect('/auth/verify-pending')
+  if (!isAdminEmail(user.email)) redirect('/dashboard')
+  return user
 }

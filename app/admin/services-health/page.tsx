@@ -1,4 +1,5 @@
 import { TIER_DESCRIPTIONS } from '@/app/api/admin/impersonate/route'
+import { requireAdmin } from '@/lib/auth/admin'
 import TierCards from './TierCards'
 
 export const dynamic = 'force-dynamic'
@@ -17,7 +18,10 @@ export const dynamic = 'force-dynamic'
  * click click click, look for empty states / broken gates / styling
  * that broke after a deploy.
  */
-export default function ServicesHealthPage() {
+export default async function ServicesHealthPage() {
+  // CRITICAL: TIER_DESCRIPTIONS exposes pre-canned QA emails. Must
+  // gate before render. See lib/auth/admin.ts:requireAdmin().
+  await requireAdmin()
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
       <div>

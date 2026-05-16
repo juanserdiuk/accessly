@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 import CreatePromoForm from './CreatePromoForm'
 import { togglePromoCode, deletePromoCode } from './actions'
 
@@ -27,6 +28,8 @@ function fmtDate(iso: string | null) {
 }
 
 export default async function PromosPage() {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const admin = createAdminClient()
   const [{ data: codes }, { data: salespeople }] = await Promise.all([
     admin

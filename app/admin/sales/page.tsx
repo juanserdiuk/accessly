@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 import Link from 'next/link'
 import CreateSalespersonForm from './CreateSalespersonForm'
 
@@ -18,6 +19,8 @@ function fmtMoney(cents: number) {
 }
 
 export default async function SalespeoplePage() {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const admin = createAdminClient()
 
   const [{ data: salespeople }, { data: redemptions }] = await Promise.all([

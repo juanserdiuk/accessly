@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdmin } from '@/lib/auth/admin'
 import { setCustomerPlan } from '../actions'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -37,6 +38,8 @@ interface PageProps {
 }
 
 export default async function CustomersPage({ searchParams }: PageProps) {
+  // CRITICAL: must precede every data fetch — see lib/auth/admin.ts.
+  await requireAdmin()
   const { q = '', plan: planFilter = '' } = await searchParams
   const admin = createAdminClient()
 

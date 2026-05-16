@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { requireAdmin } from '@/lib/auth/admin'
 import { setOwnPlan } from './actions'
 
 function relativeTime(iso: string) {
@@ -36,15 +36,20 @@ function flag(country: string | null) {
 }
 
 export default async function AdminPage() {
+  // CRITICAL: must be the first awaited call. Layout-level redirect
+  // doesn't prevent the parallel page-data fetches below from running
+  // and leaking into the RSC payload. See lib/auth/admin.ts.
+  const adminUser = await requireAdmin()
   const supabase = createAdminClient()
 
   // Pull the admin's own plan so the test-bypass panel can highlight the
-  // currently-active tier.
-  const userClient = await createClient()
-  const { data: { user: adminUser } } = await userClient.auth.getUser()
-  const { data: ownProfile } = adminUser
-    ? await supabase.from('profiles').select('plan').eq('id', adminUser.id).single()
-    : { data: null }
+  // currently-active tier. adminUser is guaranteed non-null by
+  // requireAdmin() above.
+  const { data: ownProfile } = await supabase
+    .from('profiles')
+    .select('plan')
+    .eq('id', adminUser.id)
+    .single()
   const ownPlan = (ownProfile?.plan ?? 'free') as 'free' | 'pps' | 'pro' | 'agency'
 
   const [
