@@ -44,7 +44,21 @@ export default function TierCards({ tiers }: { tiers: Tier[] }) {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error ?? `Failed (${res.status})`)
+        // Surface the Supabase diagnostic alongside the user-friendly
+        // error so the failure mode is debuggable from the UI. The
+        // admin route is gated by isAdminEmail, so leaking the raw
+        // Supabase error here is fine — it isn't reachable by non-admins.
+        const detail = data?.supabaseError
+        const detailStr = detail
+          ? typeof detail === 'string'
+            ? detail
+            : `${detail.message ?? ''}${detail.code ? ` (code: ${detail.code})` : ''}${detail.status ? ` [HTTP ${detail.status}]` : ''}`
+          : ''
+        setError(
+          detailStr
+            ? `${data.error ?? `Failed (${res.status})`}\n→ ${detailStr}`
+            : (data.error ?? `Failed (${res.status})`),
+        )
         return
       }
       setIssued(data as IssuedSession)
@@ -66,7 +80,7 @@ export default function TierCards({ tiers }: { tiers: Tier[] }) {
   return (
     <>
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 whitespace-pre-line">
           {error}
         </div>
       )}
