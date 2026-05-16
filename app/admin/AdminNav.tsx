@@ -3,13 +3,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const links = [
-  { label: 'Overview',     href: '/admin' },
-  { label: 'Customers',    href: '/admin/customers' },
-  { label: 'Analytics',    href: '/admin/analytics' },
-  { label: 'Messages',     href: '/admin/messages' },
-  { label: 'Salespeople',  href: '/admin/sales' },
-  { label: 'Promo Codes',  href: '/admin/promos' },
-  { label: 'Guest Access', href: '/admin/guests' },
+  { label: 'Overview',        href: '/admin' },
+  { label: 'Customers',       href: '/admin/customers' },
+  { label: 'Analytics',       href: '/admin/analytics' },
+  { label: 'Messages',        href: '/admin/messages' },
+  { label: 'Services Health', href: '/admin/services-health' },
+  { label: 'Salespeople',     href: '/admin/sales' },
+  { label: 'Promo Codes',     href: '/admin/promos' },
+  { label: 'Guest Access',    href: '/admin/guests' },
 ]
 
 export default function AdminNav() {
