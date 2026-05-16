@@ -18,6 +18,13 @@ interface IssuedSession {
   label: string
 }
 
+interface SetupNeeded {
+  email: string
+  steps: string[]
+  targetPlan: string
+  tierLabel: string
+}
+
 /**
  * Tier-card grid for /admin/services-health. Each card:
  *   - Renders the tier label + plain-English description
@@ -25,17 +32,24 @@ interface IssuedSession {
  *   - On success, opens a modal with the magic-link URL + copy button
  *     + an "Open in new tab" affordance (caveat: same-browser cookies
  *     will replace the admin session; use incognito instead)
+ *   - On 404 ("test user not found"), renders a structured setup
+ *     panel with the email + step-by-step Supabase instructions so
+ *     a first-time admin can finish the one-time fixture setup.
  */
 export default function TierCards({ tiers }: { tiers: Tier[] }) {
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null)
   const [issued, setIssued] = useState<IssuedSession | null>(null)
+  const [setupNeeded, setSetupNeeded] = useState<SetupNeeded | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [emailCopied, setEmailCopied] = useState(false)
 
   async function generate(slug: string) {
     setLoadingSlug(slug)
     setError(null)
+    setSetupNeeded(null)
     setCopied(false)
+    setEmailCopied(false)
     try {
       const res = await fetch('/api/admin/impersonate', {
         method: 'POST',
@@ -44,6 +58,19 @@ export default function TierCards({ tiers }: { tiers: Tier[] }) {
       })
       const data = await res.json()
       if (!res.ok) {
+        // Structured 404 from the API: test user hasn't been created
+        // yet in Supabase. Render the dedicated setup panel instead
+        // of a generic red error blob so the next step is obvious.
+        if (res.status === 404 && data?.setupInstructions) {
+          const tier = tiers.find(t => t.slug === slug)
+          setSetupNeeded({
+            email: data.setupInstructions.email,
+            steps: data.setupInstructions.steps,
+            targetPlan: data.setupInstructions.targetPlan,
+            tierLabel: tier?.label ?? slug,
+          })
+          return
+        }
         // Surface the Supabase diagnostic alongside the user-friendly
         // error so the failure mode is debuggable from the UI. The
         // admin route is gated by isAdminEmail, so leaking the raw
@@ -77,8 +104,69 @@ export default function TierCards({ tiers }: { tiers: Tier[] }) {
     })
   }
 
+  function copySetupEmail() {
+    if (!setupNeeded) return
+    navigator.clipboard.writeText(setupNeeded.email).then(() => {
+      setEmailCopied(true)
+      setTimeout(() => setEmailCopied(false), 2000)
+    })
+  }
+
   return (
     <>
+      {setupNeeded && (
+        <div role="alert" className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-1">
+                One-time setup needed
+              </p>
+              <h3 className="font-serif text-lg text-amber-950 leading-tight">
+                Create the {setupNeeded.tierLabel} test account in Supabase
+              </h3>
+              <p className="text-xs text-amber-800 mt-1">
+                Plan target after creation: <span className="font-mono">{setupNeeded.targetPlan}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSetupNeeded(null)}
+              aria-label="Dismiss setup instructions"
+              className="w-7 h-7 rounded-lg text-amber-600 hover:text-amber-900 hover:bg-amber-100 flex items-center justify-center transition shrink-0"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="bg-white border border-amber-200 rounded-xl px-3 py-2 mb-3 flex items-center justify-between gap-3">
+            <code className="font-mono text-xs text-slate-800 break-all">{setupNeeded.email}</code>
+            <button
+              type="button"
+              onClick={copySetupEmail}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-100 text-amber-900 hover:bg-amber-200 transition shrink-0"
+            >
+              {emailCopied ? 'Copied' : 'Copy email'}
+            </button>
+          </div>
+
+          <ol className="space-y-1.5 text-xs text-amber-900 leading-relaxed list-decimal list-inside marker:text-amber-600 marker:font-bold">
+            {setupNeeded.steps.map((step, i) => (
+              <li key={i}>{step}</li>
+            ))}
+          </ol>
+
+          <p className="text-[11px] text-amber-700 mt-3 leading-relaxed">
+            Why manually? Supabase&rsquo;s admin <code className="font-mono">createUser</code> API
+            returns <code className="font-mono">unexpected_failure</code> in this project, likely
+            from a project-level Auth hook. Creating the QA users once by hand is more reliable
+            and lets us pre-set fixture state.
+          </p>
+        </div>
+      )}
+
       {error && (
         <div role="alert" className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 whitespace-pre-line">
           {error}

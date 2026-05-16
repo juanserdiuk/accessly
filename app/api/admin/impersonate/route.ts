@@ -18,12 +18,28 @@ export const runtime = 'nodejs'
  * email_confirmed_at check is the only thing standing between this
  * route and full account takeover.
  *
+ * --- One-time setup (DONE BY JUAN IN SUPABASE DASHBOARD) ---
+ * Test users are created manually in Supabase → Authentication → Users.
+ * We deliberately do NOT auto-create them from this endpoint, because
+ * Supabase Auth's `admin.createUser` returns `unexpected_failure` in
+ * this project (likely a project-level Auth hook or schema constraint
+ * we can't introspect from app code). Pre-creating them once also
+ * means we can pre-fill plan/profile state and have stable QA fixtures.
+ *
+ * Required accounts (email_confirmed=true, any password):
+ *   - qa+free@accessly.us       → profiles.plan='free'
+ *   - qa+pps@accessly.us        → profiles.plan='pps',    scan_count=25
+ *   - qa+pro@accessly.us        → profiles.plan='pro'
+ *   - qa+agency@accessly.us     → profiles.plan='agency'
+ *
  * Flow:
  *   1. POST /api/admin/impersonate { tier: 'free' | 'pps' | 'pro' | 'agency' }
- *   2. Server verifies admin, finds/creates the test user, generates
- *      a magic link via Supabase admin (URL returned directly, no
- *      email sent), and replies with the URL.
- *   3. Caller opens that URL in an incognito window to sweep that
+ *   2. Server verifies admin, looks up the test user, generates a
+ *      magic link via Supabase admin (URL returned directly, no email
+ *      sent), and replies with the URL.
+ *   3. If the test user doesn't exist, returns a 404 with instructions
+ *      on how to create it manually.
+ *   4. Caller opens that URL in an incognito window to sweep that
  *      tier's experience without disturbing the admin session.
  */
 
@@ -90,14 +106,14 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // --- Resolve or create test user ---
+  // --- Look up test user (must exist; we no longer auto-create) ---
   // Paginated listUsers — Supabase caps at 1000 per page, and an org
   // running at scale may already exceed that. Walk pages until we
-  // either find the test user or hit an empty page.
+  // either find the test user or hit a non-full page.
   const admin = createAdminClient()
   let testUserId: string | null = null
 
-  async function findExistingTestUser(): Promise<string | null> {
+  try {
     let page = 1
     while (true) {
       const { data, error: listErr } = await admin.auth.admin.listUsers({
@@ -110,15 +126,14 @@ export async function POST(req: NextRequest) {
       const hit = data?.users?.find(
         u => u.email?.toLowerCase() === config.email.toLowerCase(),
       )
-      if (hit) return hit.id
-      if (!data?.users || data.users.length < 1000) return null  // last page
+      if (hit) {
+        testUserId = hit.id
+        break
+      }
+      if (!data?.users || data.users.length < 1000) break  // last page
       page++
-      if (page > 50) return null  // safety stop at 50,000 users
+      if (page > 50) break  // safety stop at 50,000 users
     }
-  }
-
-  try {
-    testUserId = await findExistingTestUser()
   } catch (err) {
     console.error('[admin.impersonate] list_users_failed:', err)
     return NextResponse.json(
@@ -128,87 +143,33 @@ export async function POST(req: NextRequest) {
   }
 
   if (!testUserId) {
-    try {
-      const randomPassword = crypto.randomUUID() + '-' + crypto.randomUUID()
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email: config.email,
-        password: randomPassword,
-        email_confirm: true,
-        user_metadata: {
-          first_name: 'QA',
-          last_name: tier.charAt(0).toUpperCase() + tier.slice(1),
-          is_qa_test_user: true,
-        },
-      })
-
-      // Log the full error shape so Vercel logs show status + code, not
-      // just the generic message. Helpful for diagnosing the
-      // "Internal Server Error" case where Supabase returns a 500 with
-      // no detail in the body.
-      if (createErr) {
-        console.error('[admin.impersonate] create_failed', JSON.stringify({
-          message: createErr.message,
-          status: (createErr as { status?: number }).status,
-          code: (createErr as { code?: string }).code,
-          name: createErr.name,
+    // Test user hasn't been created yet. Surface a clear, actionable
+    // error rather than trying to auto-create — Supabase has been
+    // returning `unexpected_failure` for admin.createUser in this
+    // project, and the manual-setup approach is more reliable anyway.
+    return NextResponse.json(
+      {
+        error: `Test user ${config.email} not found. Create it once in Supabase → Authentication → Users, then come back.`,
+        setupInstructions: {
           email: config.email,
-          tier,
-        }))
-
-        // FALLBACK: if Supabase says the user already exists, dig them
-        // out with a direct lookup. This handles the case where
-        // listUsers missed them due to pagination or a stale cache.
-        const msg = (createErr.message ?? '').toLowerCase()
-        if (
-          msg.includes('already') ||
-          msg.includes('exists') ||
-          msg.includes('duplicate') ||
-          (createErr as { status?: number }).status === 422
-        ) {
-          // Brute-force one more search — listUsers can be stale right
-          // after a deletion or under heavy write load.
-          testUserId = await findExistingTestUser()
-          if (!testUserId) {
-            return NextResponse.json(
-              {
-                error: `Supabase says user exists but we can't find them. Try again, or check the Supabase Auth dashboard for ${config.email}.`,
-                supabaseError: createErr.message,
-              },
-              { status: 500 },
-            )
-          }
-          // Fall through — testUserId is set, we'll update the profile below.
-        } else {
-          return NextResponse.json(
-            {
-              error: `Could not create test user: ${createErr.message}`,
-              supabaseError: {
-                message: createErr.message,
-                status: (createErr as { status?: number }).status,
-                code: (createErr as { code?: string }).code,
-              },
-            },
-            { status: 500 },
-          )
-        }
-      } else if (!created?.user) {
-        return NextResponse.json(
-          { error: 'Supabase returned no user object — unexpected response shape' },
-          { status: 500 },
-        )
-      } else {
-        testUserId = created.user.id
-      }
-    } catch (err) {
-      console.error('[admin.impersonate] create_threw:', err)
-      return NextResponse.json(
-        { error: `Could not create test user (exception): ${(err as Error)?.message ?? 'unknown'}` },
-        { status: 500 },
-      )
-    }
+          steps: [
+            `Open Supabase dashboard → Authentication → Users → Add user`,
+            `Email: ${config.email}`,
+            `Password: anything you want (you won't use it — we sign in via magic link)`,
+            `Tick "Auto-confirm email"`,
+            `Save, then refresh this page and click the button again.`,
+          ],
+          targetPlan: config.dbPlan,
+        },
+      },
+      { status: 404 },
+    )
   }
 
   // --- Ensure profile + plan is set (idempotent) ---
+  // Even if Juan didn't manually set plan in the dashboard, this
+  // upsert pins it on every impersonate so QA always sees the
+  // intended tier.
   await admin
     .from('profiles')
     .upsert(
