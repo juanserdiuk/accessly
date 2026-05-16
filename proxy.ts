@@ -38,6 +38,15 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Same anonymous-redirect for /admin. Page-level requireAdmin()
+  // does the real admin-vs-non-admin check, but bouncing anonymous
+  // callers at the edge means we never start rendering — proper 307
+  // semantics for smoke tests + a tiny defense-in-depth win against
+  // any future RSC data leak.
+  if (pathname.startsWith('/admin') && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   if ((pathname === '/login' || pathname === '/signup') && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
