@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { sendWelcomeEmail } from '@/lib/email/sendWelcome'
+import { notify } from '@/lib/notify'
 
 const NEW_USER_WINDOW_MS = 10 * 60 * 1000 // 10 minutes
 
@@ -59,6 +60,10 @@ export async function GET(request: NextRequest) {
             sendWelcomeEmail(user.email, firstName).catch(err =>
               console.error('[callback] welcome email failed:', err)
             )
+            // Founder ops ping — same trigger condition as the welcome
+            // email so we don't fire on every login.
+            notify.signup({ email: user.email, firstName: firstName || null })
+              .catch(err => console.error('[callback] signup notify failed:', err))
           }
         }
       } catch (err) {

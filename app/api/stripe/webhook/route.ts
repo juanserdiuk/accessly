@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyAdmin } from '@/lib/email/notifyAdmin'
+import { notify } from '@/lib/notify'
 import type Stripe from 'stripe'
 
 export const dynamic = 'force-dynamic'
@@ -132,9 +133,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
-  // Notify admin of every successful purchase (fire-and-forget).
+  // Notify admin of every successful purchase. Two channels:
+  //   (a) email — existing HTML to the admin inbox (legacy)
+  //   (b) Slack/Discord webhook — instant phone notification with the
+  //       tier + $ amount in the lock-screen preview
   const amount = formatCurrency(session.amount_total, session.currency ?? 'usd')
   const niceType = type === 'subscription' ? 'Subscription' : 'Scan pack'
+
   notifyAdmin({
     subject: `[Accessly] 💰 ${niceType}: ${plan} — ${amount}`,
     heading: `New ${niceType.toLowerCase()} purchased`,
@@ -148,6 +153,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       { label: 'Session', value: session.id },
     ],
   }).catch(() => {})
+
+  if (type === 'subscription') {
+    notify.subscriptionStarted({
+      customerEmail,
+      plan,
+      amountCents: session.amount_total ?? 0,
+      currency: session.currency ?? 'usd',
+      sessionId: session.id,
+      promoCode: typeof promoCode === 'string' ? promoCode : undefined,
+    }).catch(() => {})
+  } else if (type === 'pack') {
+    notify.packPurchased({
+      customerEmail,
+      pack: plan,
+      amountCents: session.amount_total ?? 0,
+      currency: session.currency ?? 'usd',
+      sessionId: session.id,
+      promoCode: typeof promoCode === 'string' ? promoCode : undefined,
+    }).catch(() => {})
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
@@ -156,7 +181,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, scan_count')
+    .select('id, scan_count, plan')
     .eq('stripe_customer_id', customerId)
     .single()
 
@@ -164,6 +189,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     console.warn('[webhook] customer.subscription.deleted — no profile found for customer', customerId)
     return
   }
+
+  const planWas = profile.plan ?? 'unknown'
 
   // If the canceller still has scan credits sitting in their account from
   // prior pack purchases, demote them to `pps` (they still get to use those
@@ -174,6 +201,19 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .from('profiles')
     .update({ plan: nextPlan, updated_at: new Date().toISOString() })
     .eq('id', profile.id)
+
+  // Best-effort email lookup so the founder ping has something
+  // identifiable in the lock-screen preview.
+  let customerEmail = 'unknown'
+  try {
+    const { data: { user } } = await supabase.auth.admin.getUserById(profile.id)
+    customerEmail = user?.email ?? 'unknown'
+  } catch { /* keep fallback */ }
+
+  notify.subscriptionCancelled({
+    customerEmail,
+    planWas,
+  }).catch(() => {})
 }
 
 export async function POST(req: NextRequest) {

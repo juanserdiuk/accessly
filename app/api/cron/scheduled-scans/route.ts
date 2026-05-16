@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { runScan } from '@/lib/runScan'
 import { notifyAdmin } from '@/lib/email/notifyAdmin'
+import { notify } from '@/lib/notify'
 
 export const maxDuration = 60
 export const dynamic = 'force-dynamic'
@@ -91,7 +92,7 @@ export async function GET(req: NextRequest) {
       })
 
       // Regression alert: score dropped > REGRESSION_THRESHOLD pts since
-      // last run. Best-effort admin email — never throws.
+      // last run. Best-effort admin email + Slack ping — never throws.
       if (
         row.last_score !== null &&
         result.score < row.last_score - REGRESSION_THRESHOLD
@@ -110,6 +111,22 @@ export async function GET(req: NextRequest) {
             { label: 'When', value: new Date().toLocaleString() },
           ],
         }).catch(() => {})
+
+        // Founder ops ping — surfaces customer pain to Slack/Discord so
+        // we can proactively reach out (churn-prevention).
+        ;(async () => {
+          try {
+            const { data: { user: u } } = await admin.auth.admin.getUserById(row.user_id)
+            await notify.scanRegression({
+              customerEmail: u?.email ?? 'unknown',
+              url: row.url,
+              previousScore: row.last_score!,
+              currentScore: result.score,
+            })
+          } catch (err) {
+            console.error('[cron] regression notify failed:', err)
+          }
+        })()
       }
     }
   }

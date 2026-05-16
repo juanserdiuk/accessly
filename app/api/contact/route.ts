@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notify } from '@/lib/notify'
 
 function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
@@ -43,6 +44,16 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     console.error('[contact] db insert failed:', err)
   }
+
+  // Slack/Discord ops ping — instant phone notification with name +
+  // first ~120 chars of the message so the founder can triage from
+  // the lock screen.
+  notify.contactMessage({
+    name,
+    email,
+    website: url || undefined,
+    messagePreview: message,
+  }).catch(() => {})
 
   if (!process.env.RESEND_API_KEY) {
     console.error('[contact] RESEND_API_KEY not set — message dropped')
