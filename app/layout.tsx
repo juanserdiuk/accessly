@@ -60,7 +60,27 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  // IP claim visible at the top of view-source. Renders as
+  // <meta name="copyright" content="..."/> inside <head>, which is
+  // the first thing after <!DOCTYPE html><html>...
+  other: {
+    copyright: '(c) 99 Trees Media — INTELLECTUAL PROPERTY. DO NOT COPY THIS CODE. Unauthorized reproduction or distribution is prohibited.',
+    'author': '99 Trees Media',
+  },
 }
+
+// Real HTML comment injected as the first child of <body>. Combined
+// with the <meta name="copyright"> above, anyone view-sourcing the page
+// sees the IP claim within the first ~300 characters. We can't put
+// content literally between <!DOCTYPE html> and <html> from JSX
+// (Next.js owns that boundary) — this is as close as the framework
+// permits without a body-rewriting proxy.
+const IP_COMMENT_HTML = `<!--
+  (c) 99 Trees Media. INTELLECTUAL PROPERTY.
+  DO NOT COPY THIS CODE.
+  Unauthorized reproduction, redistribution, or derivative use
+  of this source code is strictly prohibited.
+-->`
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale()
@@ -73,6 +93,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           scroll on mobile. Uses `clip` not `hidden` so position:sticky on
           children still works. */}
       <body suppressHydrationWarning className="overflow-x-clip">
+        {/* IP claim — first thing inside <body>. Hidden from layout and
+            screen readers, but visible in view-source as a real HTML
+            comment. */}
+        <div
+          hidden
+          aria-hidden="true"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{ __html: IP_COMMENT_HTML }}
+        />
+
         {/* Skip-to-content link — invisible until focused via keyboard. Critical
             a11y feature for keyboard-only users and screen-reader users so they
             don't have to tab through the entire site header on every page. */}
