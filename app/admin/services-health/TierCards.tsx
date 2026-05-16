@@ -75,12 +75,18 @@ export default function TierCards({ tiers }: { tiers: Tier[] }) {
         // error so the failure mode is debuggable from the UI. The
         // admin route is gated by isAdminEmail, so leaking the raw
         // Supabase error here is fine — it isn't reachable by non-admins.
+        // supabaseError can be: string | { message, code?, status? } |
+        // Array<{ type, message, code?, status? }> (the link-retry case).
         const detail = data?.supabaseError
-        const detailStr = detail
-          ? typeof detail === 'string'
+        const fmtSingle = (e: { type?: string; message?: string; code?: string; status?: number }) =>
+          `${e.type ? `[${e.type}] ` : ''}${e.message ?? ''}${e.code ? ` (code: ${e.code})` : ''}${e.status ? ` [HTTP ${e.status}]` : ''}`
+        const detailStr = !detail
+          ? ''
+          : typeof detail === 'string'
             ? detail
-            : `${detail.message ?? ''}${detail.code ? ` (code: ${detail.code})` : ''}${detail.status ? ` [HTTP ${detail.status}]` : ''}`
-          : ''
+            : Array.isArray(detail)
+              ? detail.map(fmtSingle).join('\n')
+              : fmtSingle(detail)
         setError(
           detailStr
             ? `${data.error ?? `Failed (${res.status})`}\n→ ${detailStr}`

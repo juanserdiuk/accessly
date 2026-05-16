@@ -112,6 +112,7 @@ export async function POST(req: NextRequest) {
   // either find the test user or hit a non-full page.
   const admin = createAdminClient()
   let testUserId: string | null = null
+  let listUsersError: { message: string; status?: number; code?: string } | null = null
 
   try {
     let page = 1
@@ -121,6 +122,16 @@ export async function POST(req: NextRequest) {
         perPage: 1000,
       })
       if (listErr) {
+        listUsersError = {
+          message: listErr.message,
+          status: (listErr as { status?: number }).status,
+          code: (listErr as { code?: string }).code,
+        }
+        console.error('[admin.impersonate] list_users_failed', JSON.stringify({
+          ...listUsersError,
+          page,
+          tier,
+        }))
         throw new Error(`listUsers failed (page ${page}): ${listErr.message}`)
       }
       const hit = data?.users?.find(
@@ -135,9 +146,11 @@ export async function POST(req: NextRequest) {
       if (page > 50) break  // safety stop at 50,000 users
     }
   } catch (err) {
-    console.error('[admin.impersonate] list_users_failed:', err)
     return NextResponse.json(
-      { error: `Could not look up test users: ${(err as Error)?.message ?? 'unknown'}` },
+      {
+        error: `Could not look up test users: ${(err as Error)?.message ?? 'unknown'}`,
+        supabaseError: listUsersError ?? (err as Error)?.message,
+      },
       { status: 500 },
     )
   }
@@ -205,25 +218,57 @@ export async function POST(req: NextRequest) {
     console.warn('[admin.impersonate] seed_skipped:', (err as Error)?.message)
   }
 
-  // --- Generate one-time magic link ---
+  // --- Generate one-time magic link (with recovery-link fallback) ---
+  // Both `magiclink` and `recovery` link types sign the user in when
+  // followed. If `magiclink` returns unexpected_failure (some
+  // project-level Supabase Auth hook misfires for this type), we fall
+  // back to `recovery` — it traverses a different Supabase code path
+  // and has worked in this project in the past for password resets.
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
-  let actionLink: string
-  try {
-    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: config.email,
-      options: {
-        redirectTo: `${siteUrl}/dashboard?qa=${tier}`,
-      },
-    })
-    if (linkErr || !linkData?.properties?.action_link) {
-      console.error('[admin.impersonate] generate_link_failed:', linkErr?.message)
-      return NextResponse.json({ error: 'Could not generate magic link' }, { status: 500 })
+  let actionLink: string | null = null
+  const linkErrors: Array<{ type: string; message: string; status?: number; code?: string }> = []
+
+  for (const linkType of ['magiclink', 'recovery'] as const) {
+    try {
+      const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+        type: linkType,
+        email: config.email,
+        options: {
+          redirectTo: `${siteUrl}/dashboard?qa=${tier}`,
+        },
+      })
+      if (linkErr) {
+        linkErrors.push({
+          type: linkType,
+          message: linkErr.message,
+          status: (linkErr as { status?: number }).status,
+          code: (linkErr as { code?: string }).code,
+        })
+        console.error(`[admin.impersonate] generate_link_failed (${linkType})`, JSON.stringify(linkErrors[linkErrors.length - 1]))
+        continue
+      }
+      if (linkData?.properties?.action_link) {
+        actionLink = linkData.properties.action_link
+        break
+      }
+      linkErrors.push({ type: linkType, message: 'no action_link in response' })
+    } catch (err) {
+      linkErrors.push({
+        type: linkType,
+        message: (err as Error)?.message ?? 'unknown exception',
+      })
+      console.error(`[admin.impersonate] generate_link_threw (${linkType}):`, err)
     }
-    actionLink = linkData.properties.action_link
-  } catch (err) {
-    console.error('[admin.impersonate] generate_link_threw:', err)
-    return NextResponse.json({ error: 'Could not generate magic link' }, { status: 500 })
+  }
+
+  if (!actionLink) {
+    return NextResponse.json(
+      {
+        error: 'Could not generate sign-in link. Both magiclink and recovery failed — see supabaseError for details.',
+        supabaseError: linkErrors,
+      },
+      { status: 500 },
+    )
   }
 
   console.log('[admin.impersonate] issued', {
