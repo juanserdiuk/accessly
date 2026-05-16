@@ -224,12 +224,49 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
   }
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('[webhook] STRIPE_WEBHOOK_SECRET is not configured')
+    // Return 200 so Stripe doesn't retry for 3 days while the env var is
+    // missing on Vercel; the log line is what should alert ops.
+    return NextResponse.json({ error: 'Server misconfigured' }, { status: 200 })
+  }
+
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err: any) {
     console.error('[webhook] signature verification failed:', err.message)
     return NextResponse.json({ error: `Webhook error: ${err.message}` }, { status: 400 })
+  }
+
+  // Idempotency: Stripe retries webhook deliveries with exponential backoff
+  // (and re-fires after network blips). Without an idempotency check we'd
+  // send duplicate "💰 New subscription" emails + Slack pings on every
+  // retry. Insert the event.id BEFORE running side-effects; if it's already
+  // there, this is a retry — short-circuit with 200 so Stripe stops.
+  //
+  // Defensive: if the stripe_events table doesn't exist yet (migration
+  // 20260516000000 hasn't been applied), we log a warning and proceed
+  // without idempotency rather than block every webhook delivery.
+  const supabase = createAdminClient()
+  const { error: insertErr } = await supabase
+    .from('stripe_events')
+    .insert({ id: event.id, type: event.type })
+
+  if (insertErr) {
+    const code = (insertErr as { code?: string }).code
+    if (code === '23505') {
+      // unique_violation = already processed.
+      console.log('[webhook] duplicate event skipped:', event.id, event.type)
+      return NextResponse.json({ received: true, duplicate: true })
+    }
+    if (code === '42P01' || /relation .* does not exist/i.test(insertErr.message ?? '')) {
+      // Table not migrated yet — degrade gracefully.
+      console.warn('[webhook] stripe_events table missing — run `supabase db push` for migration 20260516000000')
+    } else {
+      console.error('[webhook] idempotency insert failed:', insertErr)
+      return NextResponse.json({ error: 'Idempotency check failed' }, { status: 500 })
+    }
   }
 
   try {
