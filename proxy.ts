@@ -47,6 +47,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Salesperson portal — same reasoning. The layout has its own
+  // salesperson-row check that runs after this; the proxy only bounces
+  // the fully-anonymous case.
+  if (pathname.startsWith('/sales') && !user) {
+    return NextResponse.redirect(new URL('/login?next=%2Fsales', request.url))
+  }
+
   if ((pathname === '/login' || pathname === '/signup') && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
