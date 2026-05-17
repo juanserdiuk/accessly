@@ -2,17 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { runScan } from '@/lib/runScan'
 import { createClient } from '@/lib/supabase/server'
 import { sendScanWebhook } from '@/lib/webhooks'
+import { safeScanUrl } from '@/lib/urlGuard'
 
 export const maxDuration = 60
-
-function isValidHttpUrl(input: string): boolean {
-  try {
-    const u = new URL(input)
-    return u.protocol === 'http:' || u.protocol === 'https:'
-  } catch {
-    return false
-  }
-}
 
 function classifyScanError(msg: string, status?: number) {
   const lower = msg.toLowerCase()
@@ -60,15 +52,16 @@ function classifyScanError(msg: string, status?: number) {
 }
 
 export async function POST(req: NextRequest) {
-  const { url } = await req.json()
-  if (!url) return NextResponse.json({ error: 'URL is required' }, { status: 400 })
+  const { url: rawUrl } = await req.json()
+  if (!rawUrl) return NextResponse.json({ error: 'URL is required' }, { status: 400 })
 
-  if (!isValidHttpUrl(url)) {
-    return NextResponse.json(
-      { error: 'Please enter a valid http:// or https:// URL.' },
-      { status: 400 }
-    )
+  // SSRF + protocol guard. Catches localhost/private-IP/cloud-metadata
+  // pointers + non-http(s) schemes. See lib/urlGuard.ts for the policy.
+  const guarded = safeScanUrl(rawUrl)
+  if (!guarded.ok) {
+    return NextResponse.json({ error: guarded.reason }, { status: 400 })
   }
+  const url = guarded.url!
 
   try {
     const result = await runScan(url)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { runScan } from '@/lib/runScan'
 import { rateLimit, getClientIp } from '@/lib/rateLimit'
+import { safeScanUrl } from '@/lib/urlGuard'
 
 export const maxDuration = 30
 
@@ -59,7 +60,13 @@ export async function POST(req: NextRequest) {
   const rawUrl = typeof body.url === 'string' ? body.url.trim() : ''
   if (!rawUrl) return NextResponse.json({ error: '"url" is required' }, { status: 400 })
 
-  const url = /^https?:\/\//i.test(rawUrl) ? rawUrl : 'https://' + rawUrl
+  // SSRF + protocol guard — blocks localhost / private IPs / cloud
+  // metadata endpoints / non-http(s) schemes. See lib/urlGuard.ts.
+  const guarded = safeScanUrl(rawUrl)
+  if (!guarded.ok) {
+    return NextResponse.json({ error: guarded.reason }, { status: 400 })
+  }
+  const url = guarded.url!
 
   // --- Run scan ---
   try {
