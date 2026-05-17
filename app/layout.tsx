@@ -67,6 +67,10 @@ export const metadata: Metadata = {
     copyright: '(c) 99 Trees Media — INTELLECTUAL PROPERTY. DO NOT COPY THIS CODE. Unauthorized reproduction or distribution is prohibited.',
     'author': '99 Trees Media',
   },
+  // Mobile browser chrome (address bar, task switcher tile) tints to
+  // this color. Slate-900 matches the Nav header background so iOS
+  // Safari / Android Chrome chrome blends with the page UI.
+  themeColor: '#0f172a',
 }
 
 // Real HTML comment injected as the first child of <body>. Combined
