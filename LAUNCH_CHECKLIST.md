@@ -132,7 +132,11 @@ Accessly's `create-checkout` route uses inline `price_data`, so persistent Produ
 
 Stripe → Developers → Webhooks → + Add endpoint:
 - URL: `https://accessly.us/api/stripe/webhook`
-- Events: `checkout.session.completed`, `customer.subscription.deleted`
+- Events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+  - **`customer.subscription.updated` is REQUIRED** — fires when a
+    customer switches plan via the Customer Portal (Pro↔Agency).
+    Without it Stripe charges the new amount while our app keeps the
+    old tier. Handler added 2026-05-17.
 - Copy signing secret → `STRIPE_WEBHOOK_SECRET` on Vercel
 
 ### 3d. Customer Portal
