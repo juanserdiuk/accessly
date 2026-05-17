@@ -99,6 +99,13 @@ export async function POST(req: NextRequest) {
         // session back to a customer record.
         ...(user?.email ? { customer_email: user.email } : {}),
         metadata,
+        // Mirror metadata onto the SUBSCRIPTION so customer.subscription.updated
+        // events (plan switches via Customer Portal) can map back to our
+        // DB plan slug without having to read the session record. Session
+        // metadata doesn't auto-transfer to subscriptions.
+        subscription_data: {
+          metadata: { plan, billing, ...promoMetadata },
+        },
         ...(discounts ? { discounts } : {}),
         line_items: [{
           price_data: {

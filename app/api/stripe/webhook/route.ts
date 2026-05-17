@@ -175,6 +175,89 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 }
 
+/**
+ * Customer changed their subscription via the Stripe Customer Portal —
+ * usually a plan switch (Pro → Agency or vice-versa). Also fires on
+ * renewal, payment-method update, and other no-op churn, so we check
+ * whether the plan actually changed before touching profiles.plan.
+ *
+ * Mapping logic, preferred order:
+ *   1. subscription.metadata.plan        — set by our checkout flow
+ *      from 2026-05-17 forward.
+ *   2. price unit_amount                 — fallback for subscriptions
+ *      created before metadata was attached.
+ *
+ * If neither resolves we log+skip — better to leave the existing plan
+ * in place than to guess and downgrade a paying customer.
+ */
+const SUBSCRIPTION_AMOUNTS_TO_PLAN: Record<number, string> = {
+  // Pro tier
+  2900:  'pro',     // monthly $29
+  27840: 'pro',     // annual  $278.40
+  // Agency tier
+  9900:  'agency',  // monthly $99
+  95040: 'agency',  // annual  $950.40
+}
+
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
+  const supabase = createAdminClient()
+  const customerId = subscription.customer as string
+
+  const metaPlan = (subscription.metadata ?? {})['plan'] as string | undefined
+  let plan: string | undefined = metaPlan && ['free', 'pro', 'agency'].includes(metaPlan)
+    ? metaPlan
+    : undefined
+
+  if (!plan) {
+    const unitAmount = subscription.items?.data?.[0]?.price?.unit_amount ?? null
+    if (unitAmount && SUBSCRIPTION_AMOUNTS_TO_PLAN[unitAmount]) {
+      plan = SUBSCRIPTION_AMOUNTS_TO_PLAN[unitAmount]
+    }
+  }
+
+  if (!plan) {
+    console.warn('[webhook] subscription.updated could not resolve plan', {
+      subscriptionId: subscription.id,
+      customerId,
+      status: subscription.status,
+      unitAmount: subscription.items?.data?.[0]?.price?.unit_amount ?? null,
+    })
+    return
+  }
+
+  // Don't downgrade prematurely on cancellation lifecycle events —
+  // let subscription.deleted handle the actual downgrade when the
+  // billing period ends.
+  if (subscription.status === 'canceled' || subscription.status === 'incomplete_expired') {
+    return
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id, plan')
+    .eq('stripe_customer_id', customerId)
+    .single()
+
+  if (!profile) {
+    console.warn('[webhook] subscription.updated: no profile for customer', customerId)
+    return
+  }
+
+  if (profile.plan === plan) return  // no-op churn
+
+  await supabase
+    .from('profiles')
+    .update({ plan, updated_at: new Date().toISOString() })
+    .eq('id', profile.id)
+
+  console.log('[webhook] subscription.updated: plan changed', {
+    userId: profile.id,
+    from: profile.plan,
+    to: plan,
+    subscriptionId: subscription.id,
+  })
+}
+
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const supabase = createAdminClient()
   const customerId = subscription.customer as string
@@ -273,6 +356,9 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session)
+        break
+      case 'customer.subscription.updated':
+        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription)
         break
       case 'customer.subscription.deleted':
         await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
