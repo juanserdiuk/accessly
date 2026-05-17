@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { rateLimit, getClientIp } from '@/lib/rateLimit'
 import { notify } from '@/lib/notify'
 
 function esc(s: string) {
@@ -11,6 +12,21 @@ function esc(s: string) {
 }
 
 export async function POST(req: NextRequest) {
+  // Per-IP rate limit. 8 messages per 24h is generous for a real
+  // customer but tight enough to deter someone curl-spamming the
+  // contact form. Matches ClearShield's identical pattern.
+  const ip = getClientIp(req)
+  const limit = rateLimit('contact', ip, { limit: 8, windowMs: 24 * 60 * 60 * 1000 })
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "You've sent enough messages for today — we'll get back to you. If urgent, email contact@accessly.us directly." },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(limit.retryAfterSec ?? 3600) },
+      },
+    )
+  }
+
   let body: Record<string, string>
   try {
     body = await req.json()
