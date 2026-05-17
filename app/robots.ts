@@ -10,7 +10,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard', '/admin', '/auth', '/api'],
+        // /sales is the salesperson portal — closed to non-salespeople,
+        // but the URL pattern was missing from the disallow list. Bots
+        // that learn /sales via referer logs would otherwise try to
+        // index it and get a redirect-to-login that wastes their
+        // crawl budget on us for nothing.
+        disallow: ['/dashboard', '/admin', '/auth', '/api', '/sales'],
       },
     ],
     sitemap: `${BASE_URL}/sitemap.xml`,

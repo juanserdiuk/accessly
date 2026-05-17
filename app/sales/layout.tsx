@@ -1,8 +1,16 @@
 import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import SignOutButton from './SignOutButton'
+
+// /sales is a closed salesperson portal — must not be indexed.
+// robots.txt covers it via the broader /api / /admin / /auth lists,
+// but in-page noindex is the bot-canonical signal.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function SalesLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()

@@ -1,8 +1,15 @@
 import { redirect } from 'next/navigation'
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { isAdminEmail } from '@/lib/auth/admin'
 import Link from 'next/link'
 import AdminNav from './AdminNav'
+
+// robots.txt blocks /admin, but in-page noindex defends against
+// bots that learn the URL via external links.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
