@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { unstable_cache } from 'next/cache'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -36,24 +37,37 @@ export const metadata: Metadata = {
 /**
  * Pull the founder's avatar from the admin profile so the page stays in
  * sync with whatever Juan has uploaded in /dashboard/settings.
+ *
+ * Cached for 1 hour — avatar changes rarely, the lookup costs a
+ * paginated listUsers + a profiles select, and /about is hit on every
+ * marketing visit. Cache key includes the resolved admin email so a
+ * future config change re-fetches automatically.
  */
-async function getFounderAvatar(): Promise<string | null> {
+const getFounderAvatar = unstable_cache(
+  async (adminEmail: string): Promise<string | null> => {
+    try {
+      const admin = createAdminClient()
+      const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+      const founder = users?.users?.find(u => u.email?.toLowerCase() === adminEmail)
+      if (!founder) return null
+      const { data: profile } = await admin
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', founder.id)
+        .single()
+      return profile?.avatar_url ?? null
+    } catch {
+      return null
+    }
+  },
+  ['about-founder-avatar'],
+  { revalidate: 3600, tags: ['founder-avatar'] },
+)
+
+async function resolveFounderAvatar(): Promise<string | null> {
   const adminEmail = (process.env.ADMIN_EMAIL ?? process.env.NEXT_PUBLIC_ADMIN_EMAIL)?.trim().toLowerCase()
   if (!adminEmail) return null
-  try {
-    const admin = createAdminClient()
-    const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-    const founder = users?.users?.find(u => u.email?.toLowerCase() === adminEmail)
-    if (!founder) return null
-    const { data: profile } = await admin
-      .from('profiles')
-      .select('avatar_url')
-      .eq('id', founder.id)
-      .single()
-    return profile?.avatar_url ?? null
-  } catch {
-    return null
-  }
+  return getFounderAvatar(adminEmail)
 }
 
 const STATS = [
@@ -160,7 +174,7 @@ const accentMap: Record<string, { ring: string; dot: string; text: string; bg: s
 }
 
 export default async function AboutPage() {
-  const avatarUrl = await getFounderAvatar()
+  const avatarUrl = await resolveFounderAvatar()
 
   return (
     <>
