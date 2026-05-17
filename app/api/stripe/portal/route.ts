@@ -8,6 +8,15 @@ function getOrigin(req: NextRequest) {
   return (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
 }
 
+/**
+ * Issue a one-time Stripe Customer Portal URL for the signed-in user.
+ *
+ * Common launch-day trap: Stripe requires the Customer Portal to be
+ * activated in Dashboard (Settings → Billing → Customer portal →
+ * Activate) before sessions can be created. If you skip that step,
+ * every billing-portal click returns "No configuration provided…".
+ * Caught here and surfaced clearly instead of generic 500.
+ */
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -23,10 +32,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No billing account found' }, { status: 400 })
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: profile.stripe_customer_id,
-    return_url: `${getOrigin(req)}/dashboard/settings`,
-  })
-
-  return NextResponse.json({ url: session.url })
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: profile.stripe_customer_id,
+      return_url: `${getOrigin(req)}/dashboard/settings`,
+    })
+    return NextResponse.json({ url: session.url })
+  } catch (err) {
+    console.error('[stripe.portal] failed:', err)
+    const msg = (err as { message?: string })?.message ?? ''
+    if (/no configuration provided|portal.+not.+activated/i.test(msg)) {
+      return NextResponse.json(
+        { error: 'Billing portal not activated in Stripe Dashboard. Admin needs to enable it under Settings → Billing → Customer portal.' },
+        { status: 502 },
+      )
+    }
+    return NextResponse.json(
+      { error: 'Could not open billing portal. Try again in a moment.' },
+      { status: 502 },
+    )
+  }
 }
