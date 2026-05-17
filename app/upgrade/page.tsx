@@ -4,9 +4,29 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import UpgradePlans from './UpgradePlans'
 
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+
+const UPGRADE_DESCRIPTION =
+  'Pick the plan that scales with you. Unlimited scans, monitoring, white-label reports, and more.'
+
 export const metadata: Metadata = {
   title: 'Upgrade — Accessly',
-  description: 'Pick the plan that scales with you. Unlimited scans, monitoring, white-label reports, and more.',
+  description: UPGRADE_DESCRIPTION,
+  alternates: { canonical: `${BASE_URL}/upgrade` },
+  openGraph: {
+    type: 'website',
+    url: `${BASE_URL}/upgrade`,
+    siteName: 'Accessly',
+    title: 'Upgrade — Accessly',
+    description: UPGRADE_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Upgrade — Accessly',
+    description: UPGRADE_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
 }
 
 export default async function UpgradePage() {

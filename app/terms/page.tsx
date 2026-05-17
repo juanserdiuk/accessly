@@ -2,11 +2,30 @@ import type { Metadata } from 'next'
 import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+
+const TERMS_DESCRIPTION =
+  'The terms that govern using Accessly. Clear, plain-language, no enterprise legalese.'
+
 export const metadata: Metadata = {
   title: 'Terms of Service — Accessly',
-  description: 'The terms that govern using Accessly. Clear, plain-language, no enterprise legalese.',
-  alternates: { canonical: '/terms' },
+  description: TERMS_DESCRIPTION,
+  alternates: { canonical: `${BASE_URL}/terms` },
   robots: { index: true, follow: true },
+  openGraph: {
+    type: 'article',
+    url: `${BASE_URL}/terms`,
+    siteName: 'Accessly',
+    title: 'Terms of Service — Accessly',
+    description: TERMS_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service — Accessly',
+    description: TERMS_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
 }
 
 const EFFECTIVE = 'May 7, 2026'

@@ -5,9 +5,32 @@ import Nav from '@/components/Nav'
 import Footer from '@/components/Footer'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+const BASE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://accessly.us').replace(/\/$/, '')
+
+const ABOUT_DESCRIPTION =
+  'Built in Southern California by a senior accessibility consultant who spent 18+ years auditing the web by hand. Now we automate the boring parts so you don\'t have to.'
+
 export const metadata: Metadata = {
   title: 'About — Accessly',
-  description: 'Built in Southern California by a senior accessibility consultant who spent 18+ years auditing the web by hand. Now we automate the boring parts so you don\'t have to.',
+  description: ABOUT_DESCRIPTION,
+  alternates: { canonical: `${BASE_URL}/about` },
+  // Each marketing page must declare its own openGraph block.
+  // Metadata is shallowly merged, so omitting `images` here drops the
+  // parent's auto-resolved /opengraph-image from the social card.
+  openGraph: {
+    type: 'article',
+    url: `${BASE_URL}/about`,
+    siteName: 'Accessly',
+    title: 'About — Accessly',
+    description: ABOUT_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About — Accessly',
+    description: ABOUT_DESCRIPTION,
+    images: ['/opengraph-image'],
+  },
 }
 
 /**
