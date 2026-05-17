@@ -28,7 +28,7 @@ Same security + quality pass that ClearShield got, in case a future maintainer w
 - [ ] Domain `accessly.us` purchased and connected to Vercel
 - [ ] Apex (`accessly.us`) is the Primary domain in Vercel — verified ✅
 - [ ] GitHub repo `juanserdiuk/accessly` connected to Vercel (auto-deploy from `main`)
-- [ ] Supabase project provisioned
+- [ ] Supabase project at `bhokougihfwbxqdhmabl.supabase.co` provisioned
 - [ ] Stripe organization "Accessly" exists (separate account under 99 Trees Media parent)
 - [ ] Resend domain `accessly.us` verified
 
@@ -52,7 +52,7 @@ Set on the **Production** scope. Re-deploy after any change.
 | Var | Value | Source |
 |---|---|---|
 | `NEXT_PUBLIC_SITE_URL` | `https://accessly.us` | Hard-coded |
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` | Supabase → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://bhokougihfwbxqdhmabl.supabase.co` | Supabase → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | (anon public key) | Supabase → Project Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | (service_role secret) | Supabase → Project Settings → API — **NEVER commit** |
 | `STRIPE_SECRET_KEY` | `sk_live_...` | Stripe → Accessly account → Developers → API keys (Live mode) |
@@ -74,7 +74,7 @@ Set on the **Production** scope. Re-deploy after any change.
 
 ```bash
 supabase login
-supabase link --project-ref <accessly-project-ref>
+supabase link --project-ref bhokougihfwbxqdhmabl
 supabase db push
 ```
 
@@ -232,7 +232,7 @@ Fix any failure before flipping the launch switch.
 ## Useful links
 
 - Vercel: https://vercel.com/juanserdiuk/accessly
-- Supabase: https://supabase.com/dashboard/project/<accessly-ref>
+- Supabase: https://supabase.com/dashboard/project/bhokougihfwbxqdhmabl
 - Stripe: https://dashboard.stripe.com/ → Accessly account
 - Resend: https://resend.com/domains
 - GitHub: https://github.com/juanserdiuk/accessly
