@@ -76,6 +76,11 @@ Set on the **Production** scope. Re-deploy after any change.
 supabase login
 supabase link --project-ref bhokougihfwbxqdhmabl
 supabase db push
+# CRITICAL — also reload PostgREST's schema cache so supabase-js can
+# see newly-created tables. db push doesn't trigger this automatically.
+# Without it, every insert against a new table returns "PGRST205:
+# Could not find the table in the schema cache":
+supabase db query --linked "NOTIFY pgrst, 'reload schema'"
 ```
 
 Expected public tables after push:
