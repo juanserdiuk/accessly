@@ -129,7 +129,7 @@ export default function PromoModal({ open, onClose, onContinue }: Props) {
 
           {state.phase === 'valid' && (
             <div role="status" aria-live="polite" className="flex items-start gap-2.5 text-xs text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 mb-4">
-              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 shrink-0 mt-0.5">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 shrink-0 mt-0.5">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
               <div>

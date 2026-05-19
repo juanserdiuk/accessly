@@ -69,7 +69,7 @@ export default async function Features() {
         <div className="grid md:grid-cols-3 gap-5">
           {features.map((f) => (
             <div key={f.title} className="p-6 border border-slate-200 rounded-2xl hover:shadow-lg hover:-translate-y-1 transition-all bg-white">
-              <div className="text-emerald-500 mb-4">{f.icon}</div>
+              <div className="text-emerald-600 mb-4">{f.icon}</div>
               <h3 className="font-semibold text-slate-900 mb-2">{f.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
             </div>

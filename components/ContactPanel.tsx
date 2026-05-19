@@ -66,7 +66,7 @@ export default function ContactPanel() {
         {success ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center py-10">
             <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-center mb-5">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
                 <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>

@@ -20,7 +20,7 @@ export default function ShareButton({ scanId }: { scanId: string }) {
     >
       {copied ? (
         <>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <span className="text-emerald-600">{t('linkCopied')}</span>

@@ -45,10 +45,10 @@ export default async function HowItWorks() {
 
           {steps.map((step) => (
             <div key={step.number} className="flex flex-col items-center text-center relative">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-500 mb-5 relative z-10 bg-white">
+              <div className="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-700 mb-5 relative z-10 bg-white">
                 {step.icon}
               </div>
-              <div className="text-xs font-bold tracking-widest text-emerald-500 mb-2">{step.number}</div>
+              <div className="text-xs font-bold tracking-widest text-emerald-700 mb-2">{step.number}</div>
               <h3 className="font-semibold text-slate-900 mb-2">{step.title}</h3>
               <p className="text-sm text-slate-500 leading-relaxed max-w-xs">{step.desc}</p>
             </div>

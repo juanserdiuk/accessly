@@ -257,7 +257,7 @@ export default function UpgradePlans({ currentPlan, hasStripeCustomer }: Props) 
                   <li key={feature} className={`flex items-start gap-2.5 text-sm ${
                     plan.highlight ? 'text-white/85' : 'text-slate-600'
                   }`}>
-                    <span className={`shrink-0 mt-0.5 ${plan.highlight ? 'text-emerald-400' : 'text-emerald-500'}`}>
+                    <span className={`shrink-0 mt-0.5 ${plan.highlight ? 'text-emerald-400' : 'text-emerald-600'}`}>
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>

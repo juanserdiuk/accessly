@@ -63,7 +63,7 @@ export default function CreateSalespersonForm() {
 
       {state?.success && state.password && (
         <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500 shrink-0 mt-0.5">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600 shrink-0 mt-0.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
           <div className="min-w-0 flex-1">

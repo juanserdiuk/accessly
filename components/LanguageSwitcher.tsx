@@ -63,7 +63,7 @@ export default function LanguageSwitcher({ dark = false }: { dark?: boolean }) {
               <span>{l.flag}</span>
               <span>{l.label}</span>
               {l.code === locale && (
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto text-emerald-500">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="ml-auto text-emerald-600">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               )}
